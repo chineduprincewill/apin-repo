@@ -1,17 +1,17 @@
-import { Forward, MessageCircleMore, MessageSquareMore, MessageSquareText, Plus } from 'lucide-react'
-import React, { useContext, useEffect, useState } from 'react'
-import { Dialog, DialogContent, DialogTitle, DialogTrigger } from '../../components/ui/dialog'
-import { AppContext } from '../../context/AppContext'
-import NewActivity from './new-activity'
-import { fetchActivities } from '../../utils/folders'
-import { format } from 'date-fns'
-import SkeletonComponent from '../../components/skeleton-component'
-import DataTable from '../../components/data-table'
-import { getActivityStatus, statusColor } from '../../utils/functions'
-import FolderIcon from '../../components/folder-icon'
-import ShareDialog from '../folders/share-dialog'
-import { useLocation } from 'react-router-dom'
-import Comments from '../comments/Comments'
+import { Forward, MessageCircleMore, MessageSquareMore, MessageSquareText, Plus } from 'lucide-react';
+import React, { useContext, useEffect, useState } from 'react';
+import { Dialog, DialogContent, DialogTitle, DialogTrigger } from '../../components/ui/dialog';
+import { AppContext } from '../../context/AppContext';
+import NewActivity from './new-activity';
+import { fetchActivities } from '../../utils/folders';
+import { format } from 'date-fns';
+import SkeletonComponent from '../../components/skeleton-component';
+import DataTable from '../../components/data-table';
+import { getActivityStatus, statusColor } from '../../utils/functions';
+import FolderIcon from '../../components/folder-icon';
+import ShareDialog from '../folders/share-dialog';
+import { useLocation } from 'react-router-dom';
+import Comments from '../comments/Comments';
 
 const Activities = () => {
 
