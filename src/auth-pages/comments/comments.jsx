@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, useContext, act } from 'react';
+import React, { useState, useRef, useEffect, useContext } from 'react';
 import './comments.css';
 import CommentMessages from './comment-messages';
 import { CornerDownLeft } from 'lucide-react';

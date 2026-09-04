@@ -11,7 +11,8 @@ import { getActivityStatus, statusColor } from '../../utils/functions';
 import FolderIcon from '../../components/folder-icon';
 import ShareDialog from '../folders/share-dialog';
 import { useLocation } from 'react-router-dom';
-import Comments from '../comments/Comments';
+import Comments from '../comments/comments';
+//import Comments from '../comments/comments';
 
 const Activities = () => {
 

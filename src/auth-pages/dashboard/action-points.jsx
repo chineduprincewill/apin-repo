@@ -8,7 +8,7 @@ import { FileSearchCorner, MessageCircleMore, PenLine } from 'lucide-react';
 import DataTable from '../../components/data-table';
 import { statusColor } from '../../utils/functions';
 import UpdateStatus from './update-status';
-import Comments from '../comments/Comments';
+import Comments from '../comments/comments';
 import FileDetail from '../folders/file-detail';
 
 const ActionPoints = () => {
