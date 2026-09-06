@@ -14,7 +14,7 @@ const Header = ({ user }) => {
                 <p className="text-sm text-muted-foreground mt-1">
                   <span className="font-extralight dark:text-white text-blue-950 capitalize text-sm">{path}</span>
                   <span> | </span>
-                  {user && `Welcome back, ${user?.username || user?.email}`}
+                  {user && `Welcome back, ${user?.fullname || user?.email}`}
                 </p>
               </div>
             </div>

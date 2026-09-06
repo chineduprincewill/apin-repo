@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useState } from 'react'
+import React, { useContext, useEffect, useMemo, useState } from 'react'
 import { AppContext } from '../../context/AppContext';
 import { getUserActionpoints } from '../../utils/folders';
 import SkeletonComponent from '../../components/skeleton-component';
@@ -17,6 +17,7 @@ const ActionPoints = () => {
     const [actionpoints, setActionpoints] = useState();
     const [error, setError] = useState();
     const [loading, setLoading] = useState(false);
+    const [currentStatus, setCurrentStatus] = useState('pending');
 
     const columns = [
         {
@@ -169,22 +170,39 @@ const ActionPoints = () => {
             title: "responsible",
             placeholder: "Action by..."
         },
-        {
-            title: "status",
-            placeholder: "filter status..."
-        },
     ];
+
+    const statusFilter = useMemo(() => {
+        let filtered = actionpoints && actionpoints;
+
+        if(currentStatus !== ''){
+            filtered = actionpoints && actionpoints.filter(action => action.status === currentStatus)
+        }
+
+        return filtered;
+    }, [actionpoints, currentStatus])
 
     useEffect(() => {
         getUserActionpoints(token, setActionpoints, setError, setLoading)
     }, [record])
 
     return (
-        <div className='w-full p-4 bg-background rounded-2xl'>
-        {
-            loading || !actionpoints ? <SkeletonComponent /> :
-            <DataTable data={actionpoints} columns={columns} filterArrs={datafilters} />     
-        }
+        <div className='w-full pb-4 bg-background rounded-2xl'>
+            <div className='flex items-center justify-center bg-gradient-to-b from-gray-300 to-background dark:from-blue-950 dark:to-background gap-0 mb-12 rounded-t-2xl font-extralight'>
+                <div className={`w-48 py-2 border-r border-muted-foreground/20 capitalize flex justify-center cursor-pointer hover:bg-background ${currentStatus === 'pending' && 'bg-background font-bold'}`}
+                onClick={() => setCurrentStatus('pending')}><span>pending</span></div>
+                <div className={`w-48 py-2 border-r border-muted-foreground/20 capitalize flex justify-center cursor-pointer hover:bg-background ${currentStatus === 'completed' && 'bg-background font-bold'}`}
+                onClick={() => setCurrentStatus('completed')}
+                ><span>completed</span></div>
+                <div className={`w-48 py-2 capitalize border-muted-foreground/20 flex justify-center cursor-pointer hover:bg-background ${currentStatus === 'in progress' && 'bg-background font-bold'}`}
+                onClick={() => setCurrentStatus('in progress')}><span>in progress</span></div>
+            </div>
+            <div className='px-4'>
+            {
+                loading || !actionpoints ? <SkeletonComponent /> :
+                statusFilter && <DataTable data={statusFilter} columns={columns} filterArrs={datafilters} />     
+            }
+            </div>
         </div>
     )
 }

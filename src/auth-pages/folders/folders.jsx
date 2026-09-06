@@ -1,12 +1,12 @@
-import React, { useContext, useEffect, useState } from 'react'
+import React, { useContext, useEffect, useRef, useState } from 'react'
 import PageHeader from '../../components/page-header'
-import { ArrowLeft, ArrowLeftToLine, ChevronFirst, ChevronLast, ChevronLeft, ChevronRight, CircleX, CloudUpload, Edit, File, FileIcon, FileSearchCorner, FileText, FolderOpen, FolderPlusIcon, FolderSearch, Forward, House, Link, PlusCircleIcon, PlusIcon, UserPlus } from 'lucide-react'
+import { ArrowLeft, ArrowLeftToLine, ChevronFirst, ChevronLast, ChevronLeft, ChevronRight, CircleX, CloudUpload, Edit, Ellipsis, File, FileIcon, FileSearchCorner, FileText, FolderOpen, FolderPlusIcon, FolderSearch, Forward, House, Link, PlusCircleIcon, PlusIcon, ReceiptText, UserPlus, X } from 'lucide-react'
 import FolderIcon from '../../components/folder-icon'
 import UserIcon from '../../components/user-icon'
 import { Dialog, DialogContent, DialogDescription, DialogTitle, DialogTrigger } from '../../components/ui/dialog'
 import NewFolder from './new-folder'
 import { AppContext } from '../../context/AppContext'
-import { fetchFolders } from '../../utils/folders'
+import { deleteAction, fetchFolders } from '../../utils/folders'
 import SkeletonComponent from '../../components/skeleton-component'
 import DataTable from '../../components/data-table'
 import FolderUsers from './folder-users'
@@ -14,11 +14,13 @@ import FileProperties from './file-properties'
 import ShareDialog from './share-dialog'
 import FileDetail from './file-detail'
 import { useSearchParams } from 'react-router-dom'
+import RenameFolder from './rename-folder'
+import { toast } from 'sonner'
 
 const Folders = () => {
 
     const [searchParams] = useSearchParams();
-    const { token, user, record } = useContext(AppContext);
+    const { token, user, record, refreshRecord } = useContext(AppContext);
     const [folders, setFolders] = useState();
     const [error, setError] = useState();
     const [loading, setLoading] = useState(false);
@@ -30,8 +32,60 @@ const Folders = () => {
     const [isOpen, setIsOpen] = useState(false);
     const [newfolderOpen, setNewfolderpOpen] = useState(false);
     const [privileges, setPrivileges] = useState();
+    const [item_to_delete, setItem_to_delete] = useState();
+    const [success, setSuccess] = useState();
+    const [deleting, setDeleting] = useState(false);
 
-    console.log(searchParams.get('foldername'));
+    const [contextMenu, setContextMenu] = useState({
+        visible: false,
+        x: 0,
+        y: 0,
+        itemid: null,
+        item: null,
+        itemparent: null,
+        itemtype: null,
+        itemdetail: null
+    });
+    const menuRef = useRef(null);
+
+    const handleRightClick = (e, item, id, parent, type, detail) => {
+        e.preventDefault();
+        setContextMenu({
+          visible: true,
+          x: e.clientX - 220,
+          y: e.clientY,
+          itemid: id,
+          item: item,
+          itemparent: parent,
+          itemtype: type,
+          itemdetail: detail
+        });
+    };
+    
+    const handleAction = (action) => {
+        console.log(`Action: ${action} on ${contextMenu.item}`);
+        setContextMenu({ ...contextMenu, visible: false });
+    };
+
+    const actionDelete = (itemid, itemname) => {
+
+        if(window.confirm(`Are you sure you want to delete ${itemname}?`)){
+            setItem_to_delete(itemid);
+        }
+    } 
+
+    const handleClickOutside = () => {
+        setContextMenu({ 
+            visible: false,
+            x: 0,
+            y: 0,
+            itemid: null,
+            item: null,
+            itemparent: null,
+            itemtype: null,
+            itemdetail: null
+         });
+    };
 
     const updateLinks = (current, parent, type, access) => {
         //alert(current)
@@ -68,6 +122,9 @@ const Folders = () => {
                             }
                             </span>
                         </div>
+                    {
+                        deleting && item_to_delete === fld.id && <span className='text-sm text-red-500 italic'>deleting...</span>
+                    }
                     </div>
                 );
             },
@@ -124,7 +181,7 @@ const Folders = () => {
                     user && JSON.parse(user).email === fld.created_by && fld.folder_type === 'file' &&
                     <Dialog open={isOpen} onOpenChange={setIsOpen}>
                         <DialogTrigger asChild>
-                            <CloudUpload className='w-6 h-6 text-accent dark:text-brand cursor-pointer' />
+                            <CloudUpload className='w-5 h-5 text-accent dark:text-brand cursor-pointer' />
                         </DialogTrigger>
                         <DialogContent className="!w-[55vw] overflow-y-auto !max-w-none bg-background rounded-2xl">
                             <DialogTitle className="font-extralight">{fld && fld.parent_folder.split('__').at(-1).replaceAll('_', ' ')+' | '+fld.folder_title}</DialogTitle>
@@ -148,18 +205,13 @@ const Folders = () => {
                     </Dialog>
                 }
                 {
-                    user && JSON.parse(user).role === 'admin' &&
-                    <Dialog>
-                        <DialogTrigger asChild>
-                            <Edit 
-                                className="h-4 w-4 cursor-pointer" 
-                            />
-                        </DialogTrigger>
-                        <DialogContent>
-                            <DialogTitle></DialogTitle>
-                            <div></div>
-                        </DialogContent>
-                    </Dialog>
+                    user && ((JSON.parse(user).folder === 'APIN' && JSON.parse(user).role === 'admin') || 
+                    (JSON.parse(user).role === 'admin' && fld.folder_type !== 'system') || 
+                    (JSON.parse(user).email === fld.created_by && fld.folder_type !== 'system')) &&
+                    <Ellipsis 
+                        className="h-4 w-4 cursor-pointer" 
+                        onClick={(e) => contextMenu.item === fld.folder_title ? handleClickOutside() : handleRightClick(e, fld.folder_title, fld.id, fld.parent_folder, fld.folder_type, fld.description)}
+                    />
                 }
                 </div>
               );
@@ -173,6 +225,42 @@ const Folders = () => {
             placeholder: "filter folders..."
         },
     ];
+
+    if(success){
+        toast.success(success, {
+            className: "!bg-green-700 !text-white !border-white !font-bold",
+            descriptionClassName: "!text-green-700",
+        });
+        setContextMenu(
+            {
+                visible: false,
+                x: 0,
+                y: 0,
+                itemid: null,
+                item: null,
+                itemparent: null,
+                itemtype: null,
+                itemdetail: null
+            }
+        );
+        refreshRecord(Date.now());
+        setSuccess();
+    }
+
+    if(error){
+        alert(JSON.stringify(error))
+        setContextMenu({ 
+            visible: false,
+            x: 0,
+            y: 0,
+            itemid: null,
+            item: null,
+            itemparent: null,
+            itemtype: null,
+            itemdetail: null
+        });
+        setError();
+    }
 
     useEffect(() => {
         filecreated && setIsOpen(true);
@@ -190,6 +278,10 @@ const Folders = () => {
     useEffect(() => {
         searchParams.get('parentfolder') && setPrev(searchParams.get('parentfolder'));
     }, [searchParams.get('parentfolder')])
+
+    useEffect(() => {
+        item_to_delete && deleteAction(token, { id:item_to_delete }, setSuccess, setError, setDeleting)
+    }, [item_to_delete])
 
     return (
         <div className={`w-full grid ${active_view === 'folders' ? 'gap-4' : 'gap-4'} p-4`}>
@@ -368,6 +460,65 @@ const Folders = () => {
                 </DialogContent>
             </Dialog>
         }   
+        {/* Context Menu Dialog */}
+        {contextMenu.visible && (
+            <div
+                ref={menuRef}
+                style={{
+                    position: 'fixed',
+                    top: contextMenu.y,
+                    left: contextMenu.x,
+                }}
+                className="bg-background border border-muted-foreground/20 rounded-lg shadow-xl py-1 min-w-[100px] z-50"
+            >
+                <div className="flex justify-between items-center px-4 py-1 border-b border-muted-foreground/20">
+                    <Ellipsis className='text-muted-foreground' />
+                    <X 
+                        className='w-4 h-4 cursor-pointer text-red-500' 
+                        onClick={() => handleClickOutside()}
+                    />
+                </div>
+                <Dialog>
+                    <DialogTrigger asChild>
+                        <button
+                            className="w-full flex items-center gap-2 text-left px-4 py-2 hover:bg-foreground/5 transition-colors"
+                        >
+                            <ReceiptText className='w-5 h-5 text-accent dark:text-brand' /> <span>About</span>
+                        </button>
+                    </DialogTrigger>
+                    <DialogContent>
+                        <DialogTitle></DialogTitle>
+                        <div className='text-muted-foreground'>{contextMenu.itemdetail ? contextMenu.itemdetail : <span className='text-muted-foreground/40'>This file has no detail added to it.</span>}</div>
+                    </DialogContent>
+                </Dialog>
+                <Dialog>
+                    <DialogTrigger asChild>
+                        <button
+                            className="w-full text-left px-4 py-2 hover:bg-foreground/5 transition-colors"
+                        >
+                            ✏️ Rename
+                        </button>
+                    </DialogTrigger>
+                    <DialogContent>
+                        <DialogTitle></DialogTitle>
+                        <RenameFolder contextMenu={contextMenu} setContextMenu={setContextMenu} />
+                    </DialogContent>
+                </Dialog>
+            
+                {/*<button
+                    onClick={() => handleAction('duplicate')}
+                    className="w-full text-left px-4 py-2 hover:bg-gray-100 transition-colors"
+                >
+                    📋 Duplicate
+                </button>*/}
+                <button
+                    className="w-full text-left px-4 py-2 hover:bg-foreground/5 text-red-600 transition-colors"
+                    onClick={() => actionDelete(contextMenu.itemid, contextMenu.item)}
+                >
+                    🗑️ Delete
+                </button>
+            </div>
+        )}
         </div>
     )
 }

@@ -1,4 +1,4 @@
-import React, { useContext, useState } from 'react'
+import React, { useContext, useEffect, useState } from 'react'
 import { Label } from '../../components/ui/label'
 import { Textarea } from '../../components/ui/textarea'
 import { Input } from '../../components/ui/input'
@@ -10,13 +10,13 @@ import { toast } from 'sonner'
 import { Button } from '../../components/ui/button'
 import { appendArrayToFormData, removeDuplicateSentences } from '../../utils/functions'
 import { AppContext } from '../../context/AppContext'
-import { addFileProperties } from '../../utils/folders'
+import { addFileProperties, folderActionpoints } from '../../utils/folders'
 
 const FileProperties = ({ fileinfo, setIsOpen }) => {
 
     const { token } = useContext(AppContext);
     const [isDialogOpen, setIsDialogOpen] = useState(false)
-    const [brief, setBrief] = useState();
+    const [brief, setBrief] = useState(fileinfo && fileinfo.description);
     const [actionpoints, setActionpoints] = useState([]);
     const [point, setPoint] = useState();
     const [resp, setResp] = useState();
@@ -47,8 +47,8 @@ const FileProperties = ({ fileinfo, setIsOpen }) => {
         }
 
         const data = {};
-        data.action = point;
-        data.actionby = resp;
+        data.action_point = point;
+        data.responsible = resp;
         data.timeline = date;
 
         setActionpoints(() => [
@@ -141,6 +141,12 @@ const FileProperties = ({ fileinfo, setIsOpen }) => {
         });
         setError();
     }
+
+    useEffect(() => {
+            folderActionpoints(token, { id: fileinfo.id }, setActionpoints, setError, setIsLoading)
+    }, [])
+
+    console.log(actionpoints)
 
     return (
         <div className='grid gap-4'>
@@ -243,7 +249,8 @@ const FileProperties = ({ fileinfo, setIsOpen }) => {
                         <div 
                             className={`w-full p-2 border border-muted-foreground/20 rounded-xl h-36 overflow-y-scroll`}>
                         {
-                            actionpoints.length > 0 ? actionpoints.map((act, index) => (
+                            isLoading ? <span className='text-muted-foreground italic text-sm'>fetching action points...</span> :
+                            (actionpoints.length > 0 ? actionpoints.map((act, index) => (
                                 <div 
                                     key={index} 
                                     className='flex items-center gap-2 mb-3 cursor-pointer'
@@ -253,11 +260,11 @@ const FileProperties = ({ fileinfo, setIsOpen }) => {
                                         onClick={() => removeAct(act)}
                                     />
                                     <div className='grid gap-0'>
-                                        <span className='hover:text-muted-foreground font-extralight leading-tight'>{act?.action}</span>
-                                        <span className='text-xs text-muted-foreground hover:text-muted-foreground/50 font-extralight'>By {act.actionby.replaceAll(',', ' ')} not later than {format(act.timeline, 'MMMM do, yyyy')}</span>
+                                        <span className='hover:text-muted-foreground font-extralight leading-tight'>{act?.action_point}</span>
+                                        <span className='text-xs text-muted-foreground hover:text-muted-foreground/50 font-extralight'>By {act?.responsible.replaceAll(',', ' ')} not later than {format(act.timeline, 'MMMM do, yyyy')}</span>
                                     </div>
                                 </div>
-                            )) : <span className='text-muted-foreground/30'>No action entered yet</span>
+                            )) : (<span className='text-muted-foreground/30'>No action entered yet</span>))
                         }
                         </div>
                         <Button 

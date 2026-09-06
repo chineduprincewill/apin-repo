@@ -37,7 +37,7 @@ const Dashboard = () => {
                         <div className="flex items-start justify-between">
                             <div>
                                 <p className="text-sm font-medium text-muted-foreground mb-1">
-                                Total Ongoing activities
+                                Your Ongoing activities
                                 </p>
                                 <p className="text-2xl font-bold text-foreground">
                                 {
@@ -59,7 +59,7 @@ const Dashboard = () => {
                         <div className="flex items-start justify-between">
                             <div>
                                 <p className="text-sm font-medium text-muted-foreground mb-1">
-                                Total tasks
+                                Your not completed tasks
                                 </p>
                                 <p className="text-2xl font-bold text-foreground">
                                 {
