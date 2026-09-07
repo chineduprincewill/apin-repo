@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useState } from 'react'
+import React, { useContext, useEffect, useRef, useState } from 'react'
 import { Label } from '../../components/ui/label'
 import { Textarea } from '../../components/ui/textarea'
 import { Input } from '../../components/ui/input'
@@ -31,12 +31,43 @@ const FileProperties = ({ fileinfo, setIsOpen }) => {
     const [error, setError] = useState();
     const [isLoading, setIsLoading] = useState(false);
 
+    const [contextMenu, setContextMenu] = useState({
+        visible: false,
+        x: 0,
+        y: 0
+    });
+
+    const optionRef = useRef(null);
+
     const toggleActionform = () => {
         setActionform(!actionform);
     }
 
     const toggleUploadform = () => {
         setUploadform(!uploadform);
+    }
+
+    const handleKeyDown = (e) => {
+        // Check if @ key was pressed (key: '@' or keyCode: 50)
+        if (e.key === '@') {
+            e.preventDefault(); // Prevent default @ insertion
+
+            setContextMenu({
+                visible: true,
+                x: e.clientX,
+                y: e.clientY
+            });
+        }
+    };
+
+    const updatePoint = (pnt) => {
+        setPoint(pnt);
+
+        setContextMenu({
+            visible: false,
+            x: 0,
+            y: 0
+        });
     }
 
     const addActionpoint = () => {
@@ -227,8 +258,9 @@ const FileProperties = ({ fileinfo, setIsOpen }) => {
                             type="text"
                             value={point}
                             className="p-2 rounded-xl h-12 border border-muted-foreground/20"
-                            placeholder="action point"
+                            placeholder="Enter action point or type '@' to select special actions"
                             onChange={(e) => setPoint(e.target.value)}
+                            onKeyDown={handleKeyDown}
                         />
                         <div className='w-full grid md:flex md:items-start md:justify-between gap-2'>
                             <Textarea 
@@ -356,6 +388,30 @@ const FileProperties = ({ fileinfo, setIsOpen }) => {
                     </div>
                 </div>
             </div>
+            {contextMenu.visible && (
+            <div
+                ref={optionRef}
+                style={{
+                    position: 'fixed',
+                    top: contextMenu.y,
+                    left: contextMenu.x,
+                }}
+                className="bg-background border border-muted-foreground/20 rounded-lg shadow-xl py-1 w-4/12 z-50 !mt-60 !ml-5"
+            >
+                <button
+                    className="w-full text-left px-4 py-2 hover:bg-foreground/5 transition-colors"
+                    onClick={() => updatePoint('Submitted for your approval')}
+                >
+                    Submitted for your approval
+                </button>
+                <button
+                    className="w-full text-left px-4 py-2 hover:bg-foreground/5 transition-colors"
+                    onClick={() => updatePoint('Submitted for your review')}
+                >
+                    Submitted for your review
+                </button>
+            </div>
+        )}
         </div>
     )
 }

@@ -1,6 +1,6 @@
 import React, { useContext, useEffect, useRef, useState } from 'react'
 import PageHeader from '../../components/page-header'
-import { ArrowLeft, ArrowLeftToLine, ChevronFirst, ChevronLast, ChevronLeft, ChevronRight, CircleX, CloudUpload, Edit, Ellipsis, File, FileIcon, FileSearchCorner, FileText, FolderOpen, FolderPlusIcon, FolderSearch, Forward, House, Link, PlusCircleIcon, PlusIcon, ReceiptText, UserPlus, X } from 'lucide-react'
+import { ArrowLeft, ArrowLeftToLine, ChevronFirst, ChevronLast, ChevronLeft, ChevronRight, CircleX, CloudUpload, Edit, Ellipsis, File, FileIcon, FileSearchCorner, FileText, FolderOpen, FolderPlusIcon, FolderSearch, Forward, House, LayoutGrid, Link, List, PlusCircleIcon, PlusIcon, ReceiptText, UserPlus, UserRoundCog, X } from 'lucide-react'
 import FolderIcon from '../../components/folder-icon'
 import UserIcon from '../../components/user-icon'
 import { Dialog, DialogContent, DialogDescription, DialogTitle, DialogTrigger } from '../../components/ui/dialog'
@@ -16,6 +16,7 @@ import FileDetail from './file-detail'
 import { useSearchParams } from 'react-router-dom'
 import RenameFolder from './rename-folder'
 import { toast } from 'sonner'
+import GroupadminsDialog from './groupadmins-dialog'
 
 const Folders = () => {
 
@@ -35,6 +36,7 @@ const Folders = () => {
     const [item_to_delete, setItem_to_delete] = useState();
     const [success, setSuccess] = useState();
     const [deleting, setDeleting] = useState(false);
+    const [view, setView] = useState('list');
 
     const [contextMenu, setContextMenu] = useState({
         visible: false,
@@ -44,11 +46,12 @@ const Folders = () => {
         item: null,
         itemparent: null,
         itemtype: null,
-        itemdetail: null
+        itemdetail: null,
+        itemadmin: null,
     });
     const menuRef = useRef(null);
 
-    const handleRightClick = (e, item, id, parent, type, detail) => {
+    const handleRightClick = (e, item, id, parent, type, detail, admins) => {
         e.preventDefault();
         setContextMenu({
           visible: true,
@@ -58,7 +61,8 @@ const Folders = () => {
           item: item,
           itemparent: parent,
           itemtype: type,
-          itemdetail: detail
+          itemdetail: detail,
+          itemadmin: admins,
         });
     };
     
@@ -83,7 +87,8 @@ const Folders = () => {
             item: null,
             itemparent: null,
             itemtype: null,
-            itemdetail: null
+            itemdetail: null,
+            itemadmin: null,
          });
     };
 
@@ -152,6 +157,19 @@ const Folders = () => {
         },
         {
             id: 'actions',
+            header: <div className='flex justify-end items-center gap-2'>
+                    {
+                        view === 'grid' ? 
+                            <List 
+                                className='cursor-pointer' 
+                                onClick={() => setView('list')}
+                            /> : 
+                            <LayoutGrid 
+                                className='cursor-pointer' 
+                                onClick={() => setView('grid')}
+                            />
+                    }
+                    </div>,
             cell: ({ row }) => {
               const fld = row.original; 
               //const [isOpen, setIsOpen] = useState(false);
@@ -210,7 +228,7 @@ const Folders = () => {
                     (JSON.parse(user).email === fld.created_by && fld.folder_type !== 'system')) &&
                     <Ellipsis 
                         className="h-4 w-4 cursor-pointer" 
-                        onClick={(e) => contextMenu.item === fld.folder_title ? handleClickOutside() : handleRightClick(e, fld.folder_title, fld.id, fld.parent_folder, fld.folder_type, fld.description)}
+                        onClick={(e) => contextMenu.item === fld.folder_title ? handleClickOutside() : handleRightClick(e, fld.folder_title, fld.id, fld.parent_folder, fld.folder_type, fld.description, fld.group_admin)}
                     />
                 }
                 </div>
@@ -240,7 +258,8 @@ const Folders = () => {
                 item: null,
                 itemparent: null,
                 itemtype: null,
-                itemdetail: null
+                itemdetail: null,
+                itemadmin: null,
             }
         );
         refreshRecord(Date.now());
@@ -257,7 +276,8 @@ const Folders = () => {
             item: null,
             itemparent: null,
             itemtype: null,
-            itemdetail: null
+            itemdetail: null,
+            itemadmin: null,
         });
         setError();
     }
@@ -494,6 +514,19 @@ const Folders = () => {
                 <Dialog>
                     <DialogTrigger asChild>
                         <button
+                            className="w-full flex items-center gap-2 text-left px-4 py-2 hover:bg-foreground/5 transition-colors"
+                        >
+                            <UserRoundCog className='w-5 h-5 text-accent dark:text-brand' /> <span>Group admins</span>
+                        </button>
+                    </DialogTrigger>
+                    <DialogContent>
+                        <DialogTitle>Group admins</DialogTitle>
+                        <GroupadminsDialog contextMenu={contextMenu} setContextMenu={setContextMenu} />
+                    </DialogContent>
+                </Dialog>
+                <Dialog>
+                    <DialogTrigger asChild>
+                        <button
                             className="w-full text-left px-4 py-2 hover:bg-foreground/5 transition-colors"
                         >
                             ✏️ Rename
@@ -504,7 +537,7 @@ const Folders = () => {
                         <RenameFolder contextMenu={contextMenu} setContextMenu={setContextMenu} />
                     </DialogContent>
                 </Dialog>
-            
+                
                 {/*<button
                     onClick={() => handleAction('duplicate')}
                     className="w-full text-left px-4 py-2 hover:bg-gray-100 transition-colors"

@@ -4,7 +4,7 @@ import { getUserActionpoints } from '../../utils/folders';
 import SkeletonComponent from '../../components/skeleton-component';
 import { format } from 'date-fns';
 import { Dialog, DialogContent, DialogTitle, DialogTrigger } from '../../components/ui/dialog';
-import { FileSearchCorner, MessageCircleMore, PenLine } from 'lucide-react';
+import { CircleCheck, ClipboardClock, FileSearchCorner, LoaderCircle, MessageCircleMore, PenLine } from 'lucide-react';
 import DataTable from '../../components/data-table';
 import { statusColor } from '../../utils/functions';
 import UpdateStatus from './update-status';
@@ -187,17 +187,26 @@ const ActionPoints = () => {
     }, [record])
 
     return (
-        <div className='w-full pb-4 bg-background rounded-2xl'>
-            <div className='flex items-center justify-center bg-gradient-to-b from-gray-300 to-background dark:from-blue-950 dark:to-background gap-0 mb-12 rounded-t-2xl font-extralight'>
-                <div className={`w-48 py-2 border-r border-muted-foreground/20 capitalize flex justify-center cursor-pointer hover:bg-background ${currentStatus === 'pending' && 'bg-background font-bold'}`}
-                onClick={() => setCurrentStatus('pending')}><span>pending</span></div>
-                <div className={`w-48 py-2 border-r border-muted-foreground/20 capitalize flex justify-center cursor-pointer hover:bg-background ${currentStatus === 'completed' && 'bg-background font-bold'}`}
+        <div className='w-full grid pb-4 bg-background rounded-2xl'>
+            <div className='w-full flex items-center justify-center bg-gradient-to-b from-gray-300 to-background dark:from-blue-950 dark:to-background gap-0 mb-12 rounded-t-2xl font-extralight'>
+                <div className={`md:w-48 flex justify-center items-center px-6 py-2 border-r border-muted-foreground/20 capitalize gap-2 cursor-pointer hover:bg-background ${currentStatus === 'pending' && 'bg-background font-bold'}`}
+                onClick={() => setCurrentStatus('pending')}>
+                    <ClipboardClock className='w-4 h-4 text-orange-500' />
+                    <span className='hidden md:block'>pending</span>
+                </div>
+                <div className={`md:w-48 flex justify-center items-center px-6 py-2 capitalize border-r border-muted-foreground/20 gap-2 cursor-pointer hover:bg-background ${currentStatus === 'in progress' && 'bg-background font-bold'}`}
+                onClick={() => setCurrentStatus('in progress')}>
+                    <LoaderCircle className='w-4 h-4 text-green-500' />
+                    <span className='hidden md:block'>in progress</span>
+                </div>
+                <div className={`md:w-48 flex justify-center items-center px-6 py-2 border-muted-foreground/20 capitalize gap-2 cursor-pointer hover:bg-background ${currentStatus === 'completed' && 'bg-background font-bold'}`}
                 onClick={() => setCurrentStatus('completed')}
-                ><span>completed</span></div>
-                <div className={`w-48 py-2 capitalize border-muted-foreground/20 flex justify-center cursor-pointer hover:bg-background ${currentStatus === 'in progress' && 'bg-background font-bold'}`}
-                onClick={() => setCurrentStatus('in progress')}><span>in progress</span></div>
+                >
+                    <CircleCheck className='w-4 h-4 text-accent dark:text-blue-300' />
+                    <span className='hidden md:block'>completed</span>
+                </div>
             </div>
-            <div className='px-4'>
+            <div className='w-full px-4 overflow-x-scroll'>
             {
                 loading || !actionpoints ? <SkeletonComponent /> :
                 statusFilter && <DataTable data={statusFilter} columns={columns} filterArrs={datafilters} />     
