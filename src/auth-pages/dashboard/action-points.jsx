@@ -18,6 +18,25 @@ const ActionPoints = () => {
     const [error, setError] = useState();
     const [loading, setLoading] = useState(false);
     const [currentStatus, setCurrentStatus] = useState('pending');
+    const [totalbacklog, setTotalbacklog] = useState();
+    const [updated, setUpdated] = useState(0);
+
+    const hasDatePassed = (dateString) => {
+        const date = new Date(dateString);
+        const now = new Date();
+        
+        // Reset both to midnight for date-only comparison
+        date.setHours(0, 0, 0, 0);
+        now.setHours(0, 0, 0, 0);
+        
+        return date < now;
+    }
+
+    const isOneDigit = (num) => {
+        // Convert to string, remove negative sign and decimal points
+        const str = Math.abs(num).toString().replace('.', '');
+        return str.length < 2;
+    }
 
     const columns = [
         {
@@ -172,19 +191,40 @@ const ActionPoints = () => {
         },
     ];
 
+    //actionpoints && setTimeout(() => setUpdated(updated+1), 500);
+
     const statusFilter = useMemo(() => {
-        let filtered = actionpoints && actionpoints;
-
-        if(currentStatus !== ''){
-            filtered = actionpoints && actionpoints.filter(action => action.status === currentStatus)
+        // Ensure actionpoints is always an array
+        const points = Array.isArray(actionpoints) ? actionpoints : [];
+        
+        if (!currentStatus || currentStatus === '') {
+            return points;
         }
+        
+        if (currentStatus === 'backlog') {
+            return points.filter(action => 
+                action.status !== 'completed' && hasDatePassed(action.timeline)
+            );
+        }
+        
+        return points.filter(action => action.status === currentStatus);
+    }, [actionpoints, currentStatus]);
 
-        return filtered;
-    }, [actionpoints, currentStatus])
+    const getBacklogCount = () => {
+        let backlogs = 0;
+        backlogs = actionpoints && actionpoints.filter(action => action.status !== 'completed' && hasDatePassed(action.timeline)).length;
+        return backlogs;
+    }
 
     useEffect(() => {
         getUserActionpoints(token, setActionpoints, setError, setLoading)
     }, [record])
+
+    useEffect(() => {
+        setTotalbacklog(getBacklogCount());
+    }, [actionpoints])
+
+    console.log(totalbacklog);
 
     return (
         <div className='w-full grid pb-4 bg-background rounded-2xl'>
@@ -199,12 +239,27 @@ const ActionPoints = () => {
                     <LoaderCircle className='w-4 h-4 text-green-500' />
                     <span className='hidden md:block'>in progress</span>
                 </div>
-                <div className={`md:w-48 flex justify-center items-center px-6 py-2 border-muted-foreground/20 capitalize gap-2 cursor-pointer hover:bg-background ${currentStatus === 'completed' && 'bg-background font-bold'}`}
+                <div className={`md:w-48 flex justify-center items-center px-6 py-2 border-muted-foreground/20 capitalize border-r gap-2 cursor-pointer hover:bg-background ${currentStatus === 'completed' && 'bg-background font-bold'}`}
                 onClick={() => setCurrentStatus('completed')}
                 >
                     <CircleCheck className='w-4 h-4 text-accent dark:text-blue-300' />
                     <span className='hidden md:block'>completed</span>
                 </div>
+                <div className={`md:w-48 flex justify-center items-center px-6 py-2 border-muted-foreground/20 capitalize gap-2 cursor-pointer hover:bg-background ${currentStatus === 'backlog' && 'bg-background font-bold'}`}
+                onClick={() => setCurrentStatus('backlog')}
+                >
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="20" height="20" className="inline-block">
+                        <rect x="15" y="20" width="70" height="8" rx="2" className="fill-current text-gray-800 dark:text-gray-300" />
+                        <rect x="15" y="36" width="70" height="8" rx="2" className="fill-current text-gray-700 dark:text-gray-500" />
+                        <rect x="15" y="52" width="70" height="8" rx="2" className="fill-current text-gray-500 dark:text-gray-700" />
+                        <rect x="15" y="68" width="70" height="8" rx="2" className="fill-current text-gray-300 dark:text-gray-800" />
+                    </svg>
+                    <span className='hidden md:block'>backlogs</span>
+                {
+                    totalbacklog && <span className={`${isOneDigit ? 'px-1.5' : 'px-1'} py-0.5 rounded-full text-white bg-red-600 text-xs`}>{totalbacklog}</span>
+                }
+                </div>
+                
             </div>
             <div className='w-full px-4 overflow-x-scroll'>
             {

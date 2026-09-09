@@ -4,14 +4,18 @@ import { folderActionpoints, folderDocuments } from '../../utils/folders';
 import { Label } from '../../components/ui/label';
 import { Textarea } from '../../components/ui/textarea';
 import { Button } from '../../components/ui/button';
-import { CircleArrowRight, Download, FileDown } from 'lucide-react';
+import { CircleArrowRight, Download, Edit, FileDown, Plus } from 'lucide-react';
 import { Input } from '../../components/ui/input';
 import SkeletonComponent from '../../components/skeleton-component';
 import { format } from 'date-fns'
+import { Dialog, DialogContent, DialogTitle, DialogTrigger } from '../../components/ui/dialog';
+import EditActionpoints from './edit-actionpoints';
+import EditFileSummary from './edit-file-summary';
+import EditFileUploads from './edit-file-uploads';
 
-const FileDetail = ({ id, brief }) => {
+const FileDetail = ({ id, brief, creator }) => {
 
-    const { token } = useContext(AppContext);
+    const { token, user, record } = useContext(AppContext);
     const [actionpoints, setActionpoints] = useState();
     const [documents, setDocuments] = useState();
     const [error, setError] = useState();
@@ -21,11 +25,13 @@ const FileDetail = ({ id, brief }) => {
 
     useEffect(() => {
         folderActionpoints(token, data, setActionpoints, setError, setIsLoading)
-    }, [])
+    }, [record])
 
     useEffect(() => {
         folderDocuments(token, data, setDocuments, setError, setIsLoading)
     }, [])
+
+    console.log(documents)
 
     return (
         isLoading ? <SkeletonComponent /> :
@@ -84,7 +90,22 @@ const FileDetail = ({ id, brief }) => {
             {/** FILE PROPERTIES MAIN CONTENT */}
             <div className='w-full p-0 border border-muted-foreground/50 rounded-2xl'>
                 <div className={`gap-0 ${activetab === 'summary' ? 'grid' : 'hidden'}`}>
-                    <Label className="font-extralight text-lg p-3 border-b border-muted-foreground/50">Content summary</Label>
+                    <div className='flex items-center justify-between p-3 border-b border-muted-foreground/50'>
+                        <Label className="text-lg font-extralight">Content summary</Label>
+                    {
+                        user && JSON.parse(user).email === creator &&
+                        <Dialog>
+                            <DialogTrigger asChild>
+                                <Edit className='w-5 h-5 cursor-pointer text-accent dark:text-brand' />
+                            </DialogTrigger>
+                            <DialogContent>
+                                <DialogTitle>Edit file summary</DialogTitle>
+                                <EditFileSummary id={id} summary={brief} />
+                            </DialogContent>
+                        </Dialog>
+                    }
+                        
+                    </div>
                     <div className='grid gap-5 p-5'>
                         <Textarea 
                             value={brief}
@@ -113,7 +134,21 @@ const FileDetail = ({ id, brief }) => {
                                 >
                                     <div className='grid gap-0'>
                                         <span className='hover:text-muted-foreground font-extralight leading-tight'>{act?.action_point}</span>
-                                        <span className='text-xs text-muted-foreground hover:text-muted-foreground/50 font-extralight'>By {act.responsible.replaceAll(',', ' ')} not later than {format(act.timeline, 'MMMM do, yyyy')}</span>
+                                        <div className='w-full flex items-center justify-between gap-4'>
+                                            <span className='text-xs text-muted-foreground hover:text-muted-foreground/50 font-extralight'>Action by {act.responsible.replaceAll(',', ' ')} not later than {format(act.timeline, 'MMMM do, yyyy')}</span>
+                                        {
+                                            user && JSON.parse(user).email === act.created_by &&
+                                            <Dialog>
+                                                <DialogTrigger asChild>
+                                                    <Edit className='w-4 h-4 cursor-pointer text-accent dark:text-brand' />
+                                                </DialogTrigger>
+                                                <DialogContent>
+                                                    <DialogTitle>Edit action point</DialogTitle>
+                                                    <EditActionpoints a_points={act} />
+                                                </DialogContent>
+                                            </Dialog>
+                                        }
+                                        </div>
                                     </div>
                                 </div>
                             )) : <span className='text-muted-foreground/30'>No action entered yet</span>
@@ -130,14 +165,29 @@ const FileDetail = ({ id, brief }) => {
                     </div>
                 </div>
                 <div className={`gap-0 ${activetab === 'attachments' ? 'grid' : 'hidden'}`}>
-                    <Label className="font-extralight text-lg p-3 border-b border-muted-foreground/50">Upload attachments</Label>
+                    <div className='w-full p-3 border-b border-muted-foreground/50 flex items-center justify-between'>
+                        <Label className="font-extralight text-lg">Upload attachments</Label>
+                    {
+                        user && JSON.parse(user).email === creator &&
+                        <Dialog>
+                            <DialogTrigger asChild>
+                                <Plus className='w-8 h-8 cursor-pointer text-accent dark:text-brand' />
+                            </DialogTrigger>
+                            <DialogContent>
+                                <DialogTitle>Upload new document</DialogTitle>
+                                <EditFileUploads file_id={id} />
+                            </DialogContent>
+                        </Dialog>
+                    }
+                        
+                    </div>
                     <div className='grid gap-5 p-5'>
                         <div className={`grow w-full flex flex-wrap items-start gap-8 p-4 border border-muted-foreground/20 rounded-xl h-80`}>
                         {
                             documents && documents.length > 0 ? documents.map(doc => (
                                 <div 
                                     key={doc.id} 
-                                    className='grid gap-2 my-1 cursor-pointer'
+                                    className='grid gap-1 my-1 cursor-pointer'
                                 >
                                 {
                                     doc?.file_path !== null && 
@@ -145,7 +195,21 @@ const FileDetail = ({ id, brief }) => {
                                         <FileDown className='w-24 h-24 text-accent hover:text-accent/80 dark:text-brand dark:hover:text-brand/80 mx-auto' />
                                     </a>
                                 }
-                                    <span className='hover:text-muted-foreground mx-auto'>{doc?.document_title}</span>
+                                    <div className='flex items-center justify-between gap-4'>
+                                        <span className='hover:text-muted-foreground text-sm'>{doc?.document_title}</span>
+                                        {
+                                            user && JSON.parse(user).email === doc.uploaded_by &&
+                                            <Dialog>
+                                                <DialogTrigger asChild>
+                                                    <Edit className='w-4 h-4 cursor-pointer text-accent dark:text-brand' />
+                                                </DialogTrigger>
+                                                <DialogContent>
+                                                    <DialogTitle>Update {doc?.document_title} upload</DialogTitle>
+                                                    <EditFileUploads doc={doc} />
+                                                </DialogContent>
+                                            </Dialog>
+                                        }
+                                    </div>
                                 </div>
                             )) : <span className='text-muted-foreground/30'>No file uploaded</span>
                         }

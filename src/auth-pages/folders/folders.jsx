@@ -37,6 +37,8 @@ const Folders = () => {
     const [success, setSuccess] = useState();
     const [deleting, setDeleting] = useState(false);
     const [view, setView] = useState('list');
+    const [g_admin, setG_admin] = useState();
+    const userinfo = user && JSON.parse(user);
 
     const [contextMenu, setContextMenu] = useState({
         visible: false,
@@ -92,12 +94,13 @@ const Folders = () => {
          });
     };
 
-    const updateLinks = (current, parent, type, access) => {
+    const updateLinks = (current, parent, type, access, grp_admin) => {
         //alert(current)
         setFolder_name(current);
         setPrev(parent)
         setFolder_type(type)
         setPrivileges(access)
+        setG_admin(grp_admin)
     }
 
     const columns = [
@@ -112,7 +115,7 @@ const Folders = () => {
                 return (
                     <div 
                         className='flex items-center gap-4 cursor-pointer'
-                        onClick={() => fld.folder_type !== 'file' && updateLinks(fld.folder_name, fld.parent_folder, fld.folder_type, fld.privileges)}
+                        onClick={() => fld.folder_type !== 'file' && updateLinks(fld.folder_name, fld.parent_folder, fld.folder_type, fld.privileges, fld.group_admin)}
                     >
                     {
                         fld.folder_type === 'file' ?
@@ -182,7 +185,7 @@ const Folders = () => {
                     <Dialog>
                         <DialogTrigger asChild>
                             <div className='hover:text-muted-foreground'>
-                                <FileSearchCorner className='w-4 h-4' />
+                                <FileSearchCorner className='w-4 h-4 cursor-pointer' />
                             </div>
                         </DialogTrigger>
                         <DialogContent className="!w-[55vw] overflow-y-auto !max-w-none bg-background rounded-2xl">
@@ -190,13 +193,14 @@ const Folders = () => {
                             <FileDetail 
                                 id={fld.id}
                                 brief={fld.description}
+                                creator={fld.created_by}
                             />
                         </DialogContent>
                     </Dialog>
                 }
 
                 {
-                    user && JSON.parse(user).email === fld.created_by && fld.folder_type === 'file' &&
+                    user && JSON.parse(user).email === fld.created_by && fld.folder_type === 'file' && !fld.description &&
                     <Dialog open={isOpen} onOpenChange={setIsOpen}>
                         <DialogTrigger asChild>
                             <CloudUpload className='w-5 h-5 text-accent dark:text-brand cursor-pointer' />
@@ -211,7 +215,7 @@ const Folders = () => {
                     </Dialog>
                 }
                 {
-                    (user && JSON.parse(user).role === 'admin' || JSON.parse(user).email === fld.created_by) && fld.folder_type !== 'system' &&
+                    user && ((userinfo.role === 'admin' && userinfo.folder === fld.folder_name) || (userinfo.email === fld.created_by) || (fld.group_admin && fld.group_admin.includes(userinfo.email))) && fld.folder_type !== 'system' &&
                     <Dialog>
                         <DialogTrigger asChild>
                             <Forward className='w-5 h-5 cursor-pointer' />
@@ -225,7 +229,8 @@ const Folders = () => {
                 {
                     user && ((JSON.parse(user).folder === 'APIN' && JSON.parse(user).role === 'admin') || 
                     (JSON.parse(user).role === 'admin' && fld.folder_type !== 'system') || 
-                    (JSON.parse(user).email === fld.created_by && fld.folder_type !== 'system')) &&
+                    (JSON.parse(user).email === fld.created_by && fld.folder_type !== 'system') || 
+                    (fld.group_admin && fld.group_admin.includes(userinfo.email))) &&
                     <Ellipsis 
                         className="h-4 w-4 cursor-pointer" 
                         onClick={(e) => contextMenu.item === fld.folder_title ? handleClickOutside() : handleRightClick(e, fld.folder_title, fld.id, fld.parent_folder, fld.folder_type, fld.description, fld.group_admin)}
@@ -303,6 +308,8 @@ const Folders = () => {
         item_to_delete && deleteAction(token, { id:item_to_delete }, setSuccess, setError, setDeleting)
     }, [item_to_delete])
 
+    console.log(prev, folder_name);
+
     return (
         <div className={`w-full grid ${active_view === 'folders' ? 'gap-4' : 'gap-4'} p-4`}>
             {/** PAGE DIRECTORY LISTING */}
@@ -352,7 +359,7 @@ const Folders = () => {
             {/** NAVIGATION BUTTONS */}
             <div className='w-full flex justify-center items-center gap-12'>
             {
-                user && JSON.parse(user).role === 'admin' && folder_type === 'system' &&
+                user && ((userinfo.role === 'admin' && folder_name.startsWith(userinfo.folder)) || (g_admin && g_admin.includes(userinfo.email))) && folder_type === 'system' &&
                 <Dialog>
                     <DialogTrigger asChild>
                         <div className='grid gap-1'>
@@ -511,6 +518,8 @@ const Folders = () => {
                         <div className='text-muted-foreground'>{contextMenu.itemdetail ? contextMenu.itemdetail : <span className='text-muted-foreground/40'>This file has no detail added to it.</span>}</div>
                     </DialogContent>
                 </Dialog>
+            {
+                contextMenu.itemtype !== 'file' &&
                 <Dialog>
                     <DialogTrigger asChild>
                         <button
@@ -524,6 +533,7 @@ const Folders = () => {
                         <GroupadminsDialog contextMenu={contextMenu} setContextMenu={setContextMenu} />
                     </DialogContent>
                 </Dialog>
+            }
                 <Dialog>
                     <DialogTrigger asChild>
                         <button
