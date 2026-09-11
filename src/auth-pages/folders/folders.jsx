@@ -194,6 +194,7 @@ const Folders = () => {
                                 id={fld.id}
                                 brief={fld.description}
                                 creator={fld.created_by}
+                                privileges={fld.privileges}
                             />
                         </DialogContent>
                     </Dialog>

@@ -41,7 +41,10 @@ const Dashboard = () => {
                         <div className="flex items-start justify-between">
                             <div>
                                 <p className="text-sm font-medium text-muted-foreground mb-1">
-                                Your Ongoing activities
+                                {
+                                    user && JSON.parse(user).folder !== 'APIN' && 'Your '
+                                }
+                                Ongoing activities
                                 </p>
                                 <p className="text-2xl font-bold text-foreground">
                                 {
@@ -63,7 +66,10 @@ const Dashboard = () => {
                         <div className="flex items-start justify-between">
                             <div>
                                 <p className="text-sm font-medium text-muted-foreground mb-1">
-                                Your not completed tasks
+                                {
+                                    user && JSON.parse(user).folder !== 'APIN' && 'Your '
+                                }
+                                Not completed tasks
                                 </p>
                                 <p className="text-2xl font-bold text-foreground">
                                 {

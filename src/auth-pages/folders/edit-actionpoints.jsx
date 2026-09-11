@@ -8,6 +8,7 @@ import { Button } from '../../components/ui/button'
 import { AppContext } from '../../context/AppContext'
 import { updateActionpoint } from '../../utils/folders'
 import { toast } from 'sonner'
+import { RadioGroup, RadioGroupItem } from '../../components/ui/radio-group'
 
 const EditActionpoints = ({ a_points }) => {
 
@@ -15,9 +16,15 @@ const EditActionpoints = ({ a_points }) => {
     const [point, setPoint] = useState(a_points && a_points.action_point);
     const [resp, setResp] = useState(a_points && a_points.responsible);
     const [date, setDate] = useState(a_points && a_points.timeline);
+    const [priority, setPriority] = useState(a_points && a_points.priority);
     const [success, setSuccess] = useState();
     const [error, setError] = useState();
     const [updating, setUpdating] = useState(false);
+    const options = [
+        { value: "High", label: "High" },
+        { value: "Medium", label: "Medium" },
+        { value: "Low", label: "Low" },
+    ];
     const [contextMenu, setContextMenu] = useState({
         visible: false,
         x: 0,
@@ -98,6 +105,20 @@ const EditActionpoints = ({ a_points }) => {
                 >
                 </Textarea>
                 <DatePicker date={date} setDate={setDate} />
+                <RadioGroup
+                    value={priority}
+                    onValueChange={setPriority}
+                    className="flex items-center justify-end gap-4"
+                >
+                    {options.map((option) => (
+                    <div key={option.value} className="flex items-center space-x-2">
+                        <RadioGroupItem value={option.value} id={option.value} />
+                        <Label htmlFor={option.value} className="cursor-pointer text-sm font-extralight">
+                        {option.label}
+                        </Label>
+                    </div>
+                    ))}
+                </RadioGroup>
                 <Button 
                     variant="outline" 
                     className="flex gap-1 items-center h-12"

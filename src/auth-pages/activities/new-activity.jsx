@@ -1,4 +1,4 @@
-import React, { useContext, useState } from 'react'
+import React, { useContext, useEffect, useState } from 'react'
 import { AppContext } from '../../context/AppContext'
 import { Input } from '../../components/ui/input';
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from '../../components/ui/select';
@@ -6,12 +6,14 @@ import { Textarea } from '../../components/ui/textarea';
 import { Button } from '../../components/ui/button';
 import { Label } from '../../components/ui/label';
 import DatePicker from '../../components/date-picker';
-import { createFolder } from '../../utils/folders';
+import { createFolder, listActivityTypes, listProgramAreas } from '../../utils/folders';
 import { toast } from 'sonner';
+import ComboboxComponent from '../../components/combobox-component';
+import { generateTwoDigitRange, getFiscalYear, getNextQuarter } from '../../utils/functions';
 
 const NewActivity = () => {
 
-    const { token, user, refreshRecord } = useContext(AppContext);
+    const { token, user, record, refreshRecord } = useContext(AppContext);
     const [success, setSuccess] = useState();
     const [error, setError] = useState();
     const [folder_title, setFolder_title] = useState();
@@ -22,6 +24,14 @@ const NewActivity = () => {
     const [end_date, setEnd_date] = useState();
     const [isCreating, setIsCreating] = useState(false);
     const [parent_folder, setParent_folder] = useState(user && JSON.parse(user).folder)
+    const [fy, setFy] = useState(getFiscalYear(new Date()));
+    const [quarter, setQuarter] = useState(getNextQuarter());
+    const [program_area, setProgram_area] = useState();
+    const [priority, setPriority] = useState();
+    const [isLoading, setIsLoading] = useState(false);
+    const [activity_types, setActivity_types] = useState();
+    const [program_areas, setProgram_areas] = useState();
+    const fys = generateTwoDigitRange(4);
 
     const processFoldername = () => {
         let foldername;
@@ -43,6 +53,10 @@ const NewActivity = () => {
             is_activity: 'Yes',
             activity_type,
             parent_folder,
+            fy,
+            quarter,
+            program_area,
+            priority,
             start_date,
             end_date
         }
@@ -59,6 +73,9 @@ const NewActivity = () => {
         setFolder_title('');
         setDescription('');
         setActivity_type();
+        setFy();
+        setQuarter();
+        setProgram_area();
         setStart_date();
         setEnd_date();
         refreshRecord(Date.now());
@@ -70,6 +87,14 @@ const NewActivity = () => {
         setError();
     }
 
+    useEffect(() => {
+        listActivityTypes(token, setActivity_types, setError, setIsLoading)
+    }, [record])
+
+    useEffect(() => {
+        listProgramAreas(token, setProgram_areas, setError, setIsLoading)
+    }, [record])
+
     return (
         <form onSubmit={handleSubmit} className='grid gap-4'>
             <Input
@@ -80,7 +105,7 @@ const NewActivity = () => {
                 className="h-14 bg-input border-border focus:ring-2 focus:ring-primary/30 focus:border-primary transition rounded-none"
                 required
             /> 
-            <Select
+            {/*<Select
                 value={activity_type} // Reflects the current state
                 onValueChange={setActivity_type} // Updates the state on selection
             >
@@ -97,7 +122,67 @@ const NewActivity = () => {
                         <SelectItem value="Supportive Supervision">Supportive Supervision</SelectItem>
                     </SelectGroup>
                 </SelectContent>
+            </Select>*/}
+            <ComboboxComponent 
+                comboOptions={activity_types} 
+                value={activity_type} 
+                setValue={setActivity_type} 
+                placeholder={isLoading ? "fetching..." : "Search activity type"}  
+                resource="activity type"
+            />
+            <ComboboxComponent 
+                comboOptions={program_areas} 
+                value={program_area} 
+                setValue={setProgram_area} 
+                placeholder={isLoading ? "fetching..." : "Search program area"}  
+                resource="program area"
+            />
+            <Select
+                value={priority} // Reflects the current state
+                onValueChange={setPriority} // Updates the state on selection
+            >
+                <SelectTrigger 
+                    className="h-14 bg-input border-border focus:ring-2 focus:ring-primary/30 focus:border-primary transition rounded-none"
+                >
+                    <SelectValue placeholder="Priority" />
+                </SelectTrigger>
+                <SelectContent>
+                    <SelectGroup>
+                        <SelectLabel>Priority</SelectLabel>
+                        <SelectItem value="High">High</SelectItem>
+                        <SelectItem value="Medium">Medium</SelectItem>
+                        <SelectItem value="Low">Low</SelectItem>
+                    </SelectGroup>
+                </SelectContent>
             </Select>
+            <div className='flex items-center gap-4'>
+                <ComboboxComponent 
+                    comboOptions={fys} 
+                    value={fy} 
+                    setValue={setFy} 
+                    placeholder={isLoading ? "fetching..." : "Search fiscal year"}  
+                    resource="fiscal year"
+                />
+                <Select
+                    value={quarter} // Reflects the current state
+                    onValueChange={setQuarter} // Updates the state on selection
+                >
+                    <SelectTrigger 
+                        className="h-14 bg-input border-border focus:ring-2 focus:ring-primary/30 focus:border-primary transition rounded-none"
+                    >
+                        <SelectValue placeholder="Quarter" />
+                    </SelectTrigger>
+                    <SelectContent>
+                        <SelectGroup>
+                            <SelectLabel>Quarter</SelectLabel>
+                            <SelectItem value="Q1">Q1</SelectItem>
+                            <SelectItem value="Q2">Q2</SelectItem>
+                            <SelectItem value="Q3">Q3</SelectItem>
+                            <SelectItem value="Q4">Q4</SelectItem>
+                        </SelectGroup>
+                    </SelectContent>
+                </Select>
+            </div>
             <Select
                 value={accessibility} // Reflects the current state
                 onValueChange={setAccecibility} // Updates the state on selection
@@ -121,8 +206,10 @@ const NewActivity = () => {
                 onChange={(e) => setDescription(e.target.value)}
                 className="h-14 bg-input border-border focus:ring-2 focus:ring-primary/30 focus:border-primary transition rounded-none"
             />
-            <DatePicker date={start_date} setDate={setStart_date} placeholder='Select start date' style='rounded-none' />
-            <DatePicker date={end_date} setDate={setEnd_date} placeholder='Select end date' style='rounded-none' />
+            <div className='flex items-center gap-4'>
+                <DatePicker date={start_date} setDate={setStart_date} placeholder='Select start date' style='rounded-none' />
+                <DatePicker date={end_date} setDate={setEnd_date} placeholder='Select end date' style='rounded-none' />
+            </div>
             <Button
                 type="submit"
                 disabled={isCreating}

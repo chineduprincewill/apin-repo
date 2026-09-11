@@ -2,7 +2,7 @@ import React, { useContext, useEffect, useRef, useState } from 'react'
 import { Label } from '../../components/ui/label'
 import { Textarea } from '../../components/ui/textarea'
 import { Input } from '../../components/ui/input'
-import { CheckCircle, CircleArrowRight, Minus, Plus, Trash2Icon } from 'lucide-react'
+import { CheckCircle, CircleArrowRight, CircleX, Minus, Plus, Trash2Icon, Wifi, WifiHigh, WifiLow } from 'lucide-react'
 import DatePicker from '../../components/date-picker'
 import Dropzone from 'shadcn-dropzone'
 import { format } from 'date-fns'
@@ -11,10 +11,12 @@ import { Button } from '../../components/ui/button'
 import { appendArrayToFormData, removeDuplicateSentences } from '../../utils/functions'
 import { AppContext } from '../../context/AppContext'
 import { addFileProperties, folderActionpoints } from '../../utils/folders'
+import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from '../../components/ui/select'
+import { RadioGroup, RadioGroupItem } from '../../components/ui/radio-group'
 
 const FileProperties = ({ fileinfo, setIsOpen }) => {
 
-    const { token } = useContext(AppContext);
+    const { token, refreshRecord } = useContext(AppContext);
     const [isDialogOpen, setIsDialogOpen] = useState(false)
     const [brief, setBrief] = useState(fileinfo && fileinfo.description);
     const [actionpoints, setActionpoints] = useState([]);
@@ -30,6 +32,26 @@ const FileProperties = ({ fileinfo, setIsOpen }) => {
     const [success, setSuccess] = useState();
     const [error, setError] = useState();
     const [isLoading, setIsLoading] = useState(false);
+    const [priority, setPriority] = useState('Low');
+
+    const options = [
+        { value: "High", label: "High" },
+        { value: "Medium", label: "Medium" },
+        { value: "Low", label: "Low" },
+    ];
+
+    function getPriorityIcon(priority) {
+        switch (priority) {
+          case "High":
+            return <Wifi className="h-5 w-5 text-red-600" />;
+          case "Medium":
+            return <WifiHigh className="h-5 w-5 text-yellow-600" />;
+          case "Low":
+            return <WifiLow className="h-5 w-5 text-green-600" />;
+          default:
+            return null;
+        }
+    }
 
     const [contextMenu, setContextMenu] = useState({
         visible: false,
@@ -72,7 +94,7 @@ const FileProperties = ({ fileinfo, setIsOpen }) => {
 
     const addActionpoint = () => {
 
-        if((!point && point !== '') || (!resp && resp !== '') ||(!date && date !== '')){
+        if((!point && point !== '') || (!resp && resp !== '') ||(!date && date !== '') ||(!priority && priority !== '')){
             alert('Action point not entered properly');
             return;
         }
@@ -81,6 +103,7 @@ const FileProperties = ({ fileinfo, setIsOpen }) => {
         data.action_point = point;
         data.responsible = resp;
         data.timeline = date;
+        data.priority = priority;
 
         setActionpoints(() => [
             ...actionpoints,
@@ -90,6 +113,7 @@ const FileProperties = ({ fileinfo, setIsOpen }) => {
         setPoint('');
         setResp('');
         setDate();
+        setPriority('');
         toggleActionform();
     }
     
@@ -162,6 +186,7 @@ const FileProperties = ({ fileinfo, setIsOpen }) => {
         setFiledocuments([]);
         setActionpoints([]);
         setBrief('');
+        refreshRecord(Date.now());
         setTimeout(() => setIsOpen(false), 1000);
     }
 
@@ -265,13 +290,28 @@ const FileProperties = ({ fileinfo, setIsOpen }) => {
                         <div className='w-full grid md:flex md:items-start md:justify-between gap-2'>
                             <Textarea 
                                 value={resp}
-                                className="w-[62%] p-2 rounded-xl h-6 border border-muted-foreground/20"
+                                rows='3'
+                                className="w-[57%] p-2 rounded-xl !min-h-12 border border-muted-foreground/20"
                                 placeholder="email of responsible persons, separate with comma"
                                 onChange={(e) => setResp(e.target.value)}
                             >
                             </Textarea>
-                            <div className='w-[27%]'>
+                            <div className='grid gap-2 w-[32%]'>
                                 <DatePicker date={date} setDate={setDate} />
+                                <RadioGroup
+                                    value={priority}
+                                    onValueChange={setPriority}
+                                    className="flex items-center gap-3"
+                                >
+                                    {options.map((option) => (
+                                    <div key={option.value} className="flex items-center space-x-2">
+                                        <RadioGroupItem value={option.value} id={option.value} />
+                                        <Label htmlFor={option.value} className="cursor-pointer text-sm font-extralight">
+                                        {option.label}
+                                        </Label>
+                                    </div>
+                                    ))}
+                                </RadioGroup>
                             </div>
                             <Plus 
                                 className='w-12 h-12 hover:text-muted-foreground cursor-pointer' 
@@ -285,16 +325,19 @@ const FileProperties = ({ fileinfo, setIsOpen }) => {
                             (actionpoints.length > 0 ? actionpoints.map((act, index) => (
                                 <div 
                                     key={index} 
-                                    className='flex items-center gap-2 mb-3 cursor-pointer'
+                                    className='flex items-center justify-between'
                                 >
-                                    <Trash2Icon 
-                                        className='w-6 h-6 text-red-600 hover:text-red-800' 
+                                    <div className='flex items-center gap-2 mb-3'>
+                                        {getPriorityIcon(act.priority)}
+                                        <div className='grid gap-0'>
+                                            <span className='hover:text-muted-foreground font-extralight leading-tight'>{act?.action_point}</span>
+                                            <span className='text-xs text-muted-foreground hover:text-muted-foreground/50 font-extralight'>By {act?.responsible.replaceAll(',', ' ')} not later than {format(act.timeline, 'MMMM do, yyyy')}</span>
+                                        </div>
+                                    </div>
+                                    <CircleX 
+                                        className='w-5 h-5 text-red-600 hover:text-red-800 cursor-pointer' 
                                         onClick={() => removeAct(act)}
                                     />
-                                    <div className='grid gap-0'>
-                                        <span className='hover:text-muted-foreground font-extralight leading-tight'>{act?.action_point}</span>
-                                        <span className='text-xs text-muted-foreground hover:text-muted-foreground/50 font-extralight'>By {act?.responsible.replaceAll(',', ' ')} not later than {format(act.timeline, 'MMMM do, yyyy')}</span>
-                                    </div>
                                 </div>
                             )) : (<span className='text-muted-foreground/30'>No action entered yet</span>))
                         }

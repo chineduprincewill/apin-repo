@@ -4,7 +4,7 @@ import { folderActionpoints, folderDocuments } from '../../utils/folders';
 import { Label } from '../../components/ui/label';
 import { Textarea } from '../../components/ui/textarea';
 import { Button } from '../../components/ui/button';
-import { CircleArrowRight, Download, Edit, FileDown, Plus } from 'lucide-react';
+import { CircleArrowRight, Download, Edit, FileDown, Plus, Wifi, WifiHigh, WifiLow } from 'lucide-react';
 import { Input } from '../../components/ui/input';
 import SkeletonComponent from '../../components/skeleton-component';
 import { format } from 'date-fns'
@@ -13,7 +13,7 @@ import EditActionpoints from './edit-actionpoints';
 import EditFileSummary from './edit-file-summary';
 import EditFileUploads from './edit-file-uploads';
 
-const FileDetail = ({ id, brief, creator }) => {
+const FileDetail = ({ id, brief, creator, privileges }) => {
 
     const { token, user, record } = useContext(AppContext);
     const [actionpoints, setActionpoints] = useState();
@@ -22,6 +22,19 @@ const FileDetail = ({ id, brief, creator }) => {
     const [isLoading, setIsLoading] = useState(false);
     const data = { id };
     const [activetab, setActivetab] = useState('summary');
+
+    function getPriorityIcon(priority) {
+        switch (priority) {
+          case "High":
+            return <Wifi className="h-5 w-5 text-red-600" />;
+          case "Medium":
+            return <WifiHigh className="h-5 w-5 text-yellow-600" />;
+          case "Low":
+            return <WifiLow className="h-5 w-5 text-green-600" />;
+          default:
+            return null;
+        }
+    }
 
     useEffect(() => {
         folderActionpoints(token, data, setActionpoints, setError, setIsLoading)
@@ -130,26 +143,29 @@ const FileDetail = ({ id, brief, creator }) => {
                             actionpoints && actionpoints.length > 0 ? actionpoints.map(act => (
                                 <div 
                                     key={act.id} 
-                                    className='flex items-center gap-2 mb-4 cursor-pointer pb-2 border-b border-muted-foreground/20'
+                                    className='flex items-center justify-between mb-4 cursor-pointer pb-2 border-b border-muted-foreground/20'
                                 >
-                                    <div className='grid gap-0'>
-                                        <span className='hover:text-muted-foreground font-extralight leading-tight'>{act?.action_point}</span>
-                                        <div className='w-full flex items-center justify-between gap-4'>
+                                    <div className='flex items-center gap-2'>
+                                    {
+                                        getPriorityIcon(act.priority)
+                                    }
+                                        <div className='grid gap-0'>
+                                            <span className='hover:text-muted-foreground font-extralight leading-tight'>{act?.action_point}</span>
                                             <span className='text-xs text-muted-foreground hover:text-muted-foreground/50 font-extralight'>Action by {act.responsible.replaceAll(',', ' ')} not later than {format(act.timeline, 'MMMM do, yyyy')}</span>
-                                        {
-                                            user && JSON.parse(user).email === act.created_by &&
-                                            <Dialog>
-                                                <DialogTrigger asChild>
-                                                    <Edit className='w-4 h-4 cursor-pointer text-accent dark:text-brand' />
-                                                </DialogTrigger>
-                                                <DialogContent>
-                                                    <DialogTitle>Edit action point</DialogTitle>
-                                                    <EditActionpoints a_points={act} />
-                                                </DialogContent>
-                                            </Dialog>
-                                        }
                                         </div>
                                     </div>
+                                    {
+                                        user && JSON.parse(user).email === act.created_by &&
+                                        <Dialog>
+                                            <DialogTrigger asChild>
+                                                <Edit className='w-4 h-4 cursor-pointer text-accent dark:text-brand' />
+                                            </DialogTrigger>
+                                            <DialogContent>
+                                                <DialogTitle>Edit action point</DialogTitle>
+                                                <EditActionpoints a_points={act} />
+                                            </DialogContent>
+                                        </Dialog>
+                                    }
                                 </div>
                             )) : <span className='text-muted-foreground/30'>No action entered yet</span>
                         }
@@ -168,7 +184,7 @@ const FileDetail = ({ id, brief, creator }) => {
                     <div className='w-full p-3 border-b border-muted-foreground/50 flex items-center justify-between'>
                         <Label className="font-extralight text-lg">Upload attachments</Label>
                     {
-                        user && JSON.parse(user).email === creator &&
+                        user && (JSON.parse(user).email === creator || (privileges && privileges.includes(JSON.parse(user).email))) &&
                         <Dialog>
                             <DialogTrigger asChild>
                                 <Plus className='w-8 h-8 cursor-pointer text-accent dark:text-brand' />
@@ -198,7 +214,7 @@ const FileDetail = ({ id, brief, creator }) => {
                                     <div className='flex items-center justify-between gap-4'>
                                         <span className='hover:text-muted-foreground text-sm'>{doc?.document_title}</span>
                                         {
-                                            user && JSON.parse(user).email === doc.uploaded_by &&
+                                            user && (JSON.parse(user).email === doc.uploaded_by  || (privileges && privileges.includes(JSON.parse(user).email))) &&
                                             <Dialog>
                                                 <DialogTrigger asChild>
                                                     <Edit className='w-4 h-4 cursor-pointer text-accent dark:text-brand' />

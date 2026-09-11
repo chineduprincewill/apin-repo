@@ -63,6 +63,41 @@ export const statusColor = (stat) => {
     }
 }
 
+export const bgColor = (stat) => {
+    switch(stat) {
+        case 'pending...':
+            return 'bg-orange-500';
+        case 'pending':
+            return 'bg-orange-500';
+        case 'Not started':
+            return 'bg-orange-500';
+        case 'processing...':
+            return 'bg-brand';
+        case 'On going...':
+            return 'bg-green-500';
+        case 'in progress':
+            return 'bg-green-500';
+        case 'completed...':
+            return 'bg-green-500';
+        case 'completed':
+            return 'bg-accent dark:bg-brand';
+        case 'declined...':
+            return 'bg-red-500';
+        case 'cancelled':
+            return 'bg-red-500';
+        case 'awaiting rating...':
+            return 'bg-orange-500';
+        case 'rating in progress...':
+            return 'bg-brand';
+        case 'rating completed':
+            return 'bg-green-600';
+        case 'Completed':
+            return 'bg-blue-600 dark:bg-blue-300';
+        default:
+            return 'bg-red-500';
+    }
+}
+
 export const compareJsonAndGetDifferences = (obj1, obj2) => {
     const differences = {};
     obj1 = JSON.parse(obj1);
@@ -247,4 +282,45 @@ export const getActivityStatus = (date1, date2) => {
 
     // Fallback (should never occur with valid dates)
     return 'unknown';
+}
+
+
+export const generateTwoDigitRange = (start) => {
+    // Get the last two digits of the current year
+    const end = (new Date().getFullYear() + 1) % 100;
+  
+    // Validate input
+    if (typeof start !== 'number' || !Number.isInteger(start)) {
+      throw new TypeError('Start must be an integer');
+    }
+  
+    if (start < 0 || start > 99) {
+      throw new RangeError('Start must be between 0 and 99');
+    }
+  
+    const result = [];
+    for (let i = start; i <= end; i++) {
+        result.push({ title: 'FY'+String(i).padStart(2, '0') });
+    }
+    return result;
+}
+
+export const getNextQuarter = () => {
+    const month = new Date().getMonth(); // 0 = Jan, 11 = Dec
+  
+    // Determine current quarter (1–4)
+    const currentQuarter = Math.floor(month / 3) + 1;
+  
+    // Return the NEXT quarter, wrapping Q4 → Q1
+    const nextQuarter = (currentQuarter % 4) + 1;
+  
+    return `Q${nextQuarter}`;
+}
+
+export const getFiscalYear = (date = new Date()) => {
+    const year = date.getFullYear();
+    const month = date.getMonth();
+  
+    const fiscalYear = month >= 9 ? year + 1 : year;
+    return 'FY' + String(fiscalYear % 100).padStart(2, '0');
 }

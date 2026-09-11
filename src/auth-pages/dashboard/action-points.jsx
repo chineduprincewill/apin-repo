@@ -10,16 +10,21 @@ import { statusColor } from '../../utils/functions';
 import UpdateStatus from './update-status';
 import Comments from '../comments/comments';
 import FileDetail from '../folders/file-detail';
+import { RadioGroup, RadioGroupItem } from '../../components/ui/radio-group';
+import { Label } from '../../components/ui/label';
+import { cn } from "@/lib/utils";
+import PriorityOptions from '../../components/priority-options';
 
 const ActionPoints = () => {
 
-    const { token, user, record } = useContext(AppContext);
+    const { token, user, record, logout } = useContext(AppContext);
     const [actionpoints, setActionpoints] = useState();
     const [error, setError] = useState();
     const [loading, setLoading] = useState(false);
     const [currentStatus, setCurrentStatus] = useState('pending');
     const [totalbacklog, setTotalbacklog] = useState();
     const [updated, setUpdated] = useState(0);
+    const [priority, setPriority] = useState('High');
 
     const hasDatePassed = (dateString) => {
         const date = new Date(dateString);
@@ -30,6 +35,19 @@ const ActionPoints = () => {
         now.setHours(0, 0, 0, 0);
         
         return date < now;
+    }
+
+    const getPriorityIcon = (priority) => {
+        switch (priority) {
+          case "High":
+            return <span className='max-w-max px-4 py-0.5 rounded-full text-sm border border-red-200 text-red-600 bg-red-50'>{priority} priority</span>;
+          case "Medium":
+            return <span className='max-w-max px-4 py-0.5 rounded-full text-sm border border-yellow-200 text-yellow-600 bg-yellow-50'>{priority} priority</span>;
+          case "Low":
+            return <span className='max-w-max px-4 py-0.5 rounded-full text-sm border border-green-200 text-green-600 bg-green-50'>{priority} priority</span>;
+          default:
+            return null;
+        }
     }
 
     const isOneDigit = (num) => {
@@ -127,6 +145,27 @@ const ActionPoints = () => {
             enableColumnFilter: true,
         },
         {
+            accessorKey: 'priority',
+            header: 'Priority',
+            cell: ({ row }) => {
+                const fld = row.original; 
+                //const [isOpen, setIsOpen] = useState(false);
+                //const [assignOpen, setAssignOpen] = useState(false);
+      
+                return (
+                    <div 
+                        className='flex items-center gap-4 cursor-pointer'
+                    >
+                    {
+                        fld.priority && getPriorityIcon(fld.priority)
+                    }
+                    </div>
+                );
+            },
+            enableSorting: true,
+            enableColumnFilter: true,
+        },
+        {
             id: 'actions',
             cell: ({ row }) => {
               const fld = row.original; 
@@ -195,20 +234,29 @@ const ActionPoints = () => {
 
     const statusFilter = useMemo(() => {
         // Ensure actionpoints is always an array
-        const points = Array.isArray(actionpoints) ? actionpoints : [];
+        let points = Array.isArray(actionpoints) ? actionpoints : [];
         
-        if (!currentStatus || currentStatus === '') {
+        if ((!currentStatus || currentStatus === '') && (!priority || priority === '')) {
             return points;
         }
         
-        if (currentStatus === 'backlog') {
-            return points.filter(action => 
-                action.status !== 'completed' && hasDatePassed(action.timeline)
-            );
+        if(currentStatus && currentStatus !== ''){
+            if (currentStatus === 'backlog') {
+                points = points.filter(action => 
+                    action.status !== 'completed' && hasDatePassed(action.timeline)
+                );
+            }
+            else{
+                points = points.filter(action => action.status === currentStatus);
+            }
         }
         
-        return points.filter(action => action.status === currentStatus);
-    }, [actionpoints, currentStatus]);
+        if(priority && priority !== ''){
+            points = points.filter(pr => pr.priority === priority);
+        }
+
+        return points;
+    }, [actionpoints, currentStatus, priority]);
 
     const getBacklogCount = () => {
         let backlogs = 0;
@@ -228,7 +276,7 @@ const ActionPoints = () => {
 
     return (
         <div className='w-full grid pb-4 bg-background rounded-2xl'>
-            <div className='w-full flex items-center justify-center bg-gradient-to-b from-gray-300 to-background dark:from-blue-950 dark:to-background gap-0 mb-12 rounded-t-2xl font-extralight'>
+            <div className='w-full flex items-center justify-center bg-gradient-to-b from-gray-300 to-background dark:from-blue-950 dark:to-background gap-0 rounded-t-2xl font-extralight'>
                 <div className={`md:w-48 flex justify-center items-center px-6 py-2 border-r border-muted-foreground/20 capitalize gap-2 cursor-pointer hover:bg-background ${currentStatus === 'pending' && 'bg-background font-bold'}`}
                 onClick={() => setCurrentStatus('pending')}>
                     <ClipboardClock className='w-4 h-4 text-orange-500' />
@@ -261,6 +309,7 @@ const ActionPoints = () => {
                 </div>
                 
             </div>
+            <PriorityOptions setPriority={setPriority} priority={priority} />
             <div className='w-full px-4 overflow-x-scroll'>
             {
                 loading || !actionpoints ? <SkeletonComponent /> :

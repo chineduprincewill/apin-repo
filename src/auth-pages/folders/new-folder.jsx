@@ -1,15 +1,16 @@
-import React, { useContext, useState } from 'react'
+import React, { useContext, useEffect, useState } from 'react'
 import { AppContext } from '../../context/AppContext'
 import { Input } from '../../components/ui/input';
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from '../../components/ui/select';
 import { Textarea } from '../../components/ui/textarea';
 import { Button } from '../../components/ui/button';
 import { toast } from 'sonner';
-import { createFolder } from '../../utils/folders';
+import { createFolder, listActivityTypes } from '../../utils/folders';
+import ComboboxComponent from '../../components/combobox-component';
 
 const NewFolder = ({ parent_folder, foldertype, setFilecreated }) => {
 
-    const { token, refreshRecord} = useContext(AppContext);
+    const { token, record, refreshRecord} = useContext(AppContext);
     const [success, setSuccess] = useState();
     const [error, setError] = useState();
     const [folder_title, setFolder_title] = useState();
@@ -18,6 +19,7 @@ const NewFolder = ({ parent_folder, foldertype, setFilecreated }) => {
     const [description, setDescription] = useState();
     const [activity, setActivity] = useState();
     const [isLoading, setIsLoading] = useState(false);
+    const [activity_types, setActivity_types] = useState();
 
 
     const processFoldername = () => {
@@ -60,6 +62,10 @@ const NewFolder = ({ parent_folder, foldertype, setFilecreated }) => {
         setError();
     }
 
+    useEffect(() => {
+        listActivityTypes(token, setActivity_types, setError, setIsLoading)
+    }, [record])
+
     return (
         <div>
             <form onSubmit={handleSubmit} className='grid gap-4'>
@@ -73,24 +79,13 @@ const NewFolder = ({ parent_folder, foldertype, setFilecreated }) => {
                 /> 
             {
                 foldertype !== 'system' &&
-                <Select
-                    value={activity} // Reflects the current state
-                    onValueChange={setActivity} // Updates the state on selection
-                >
-                    <SelectTrigger 
-                        className="h-14 bg-input border-border focus:ring-2 focus:ring-primary/30 focus:border-primary transition rounded-none"
-                    >
-                        <SelectValue placeholder="Activity" />
-                    </SelectTrigger>
-                    <SelectContent>
-                        <SelectGroup>
-                            <SelectLabel>Activity</SelectLabel>
-                            <SelectItem value="Meeting">Meeting</SelectItem>
-                            <SelectItem value="Technical Assistance">Technical Assistance</SelectItem>
-                            <SelectItem value="Supportive Supervision">Supportive Supervision</SelectItem>
-                        </SelectGroup>
-                    </SelectContent>
-                </Select>
+                <ComboboxComponent 
+                    comboOptions={activity_types} 
+                    value={activity} 
+                    setValue={setActivity} 
+                    placeholder={isLoading ? "fetching..." : "Search activity type"}  
+                    resource="activity type"
+                />
             } 
                 <Select
                     value={accessibility} // Reflects the current state
