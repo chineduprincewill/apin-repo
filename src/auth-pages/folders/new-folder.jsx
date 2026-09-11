@@ -7,6 +7,7 @@ import { Button } from '../../components/ui/button';
 import { toast } from 'sonner';
 import { createFolder, listActivityTypes } from '../../utils/folders';
 import ComboboxComponent from '../../components/combobox-component';
+import CheckIfActivity from './check-if-activity';
 
 const NewFolder = ({ parent_folder, foldertype, setFilecreated }) => {
 
@@ -20,6 +21,7 @@ const NewFolder = ({ parent_folder, foldertype, setFilecreated }) => {
     const [activity, setActivity] = useState();
     const [isLoading, setIsLoading] = useState(false);
     const [activity_types, setActivity_types] = useState();
+    const [if_activity, setIf_activity] = useState(true)
 
 
     const processFoldername = () => {
@@ -68,6 +70,10 @@ const NewFolder = ({ parent_folder, foldertype, setFilecreated }) => {
 
     return (
         <div>
+        {
+            if_activity && folder_type === 'document' ?
+            <CheckIfActivity setIf_activity={setIf_activity} />
+            :
             <form onSubmit={handleSubmit} className='grid gap-4'>
                 <Input
                     type="text"
@@ -128,6 +134,8 @@ const NewFolder = ({ parent_folder, foldertype, setFilecreated }) => {
                     )}
                 </Button>
             </form>
+        }
+            
             
         </div>
     )
