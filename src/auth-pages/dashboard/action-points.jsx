@@ -319,8 +319,6 @@ const ActionPoints = () => {
         setTotalbacklog(getBacklogCount());
     }, [actionpoints])
 
-    console.log(actionpoints);
-
     return (
         <div className='w-full grid pb-4 bg-background rounded-2xl'>
             <div className='w-full flex items-center justify-center bg-gradient-to-b from-gray-300 to-background dark:from-blue-950 dark:to-background gap-0 rounded-t-2xl font-extralight'>

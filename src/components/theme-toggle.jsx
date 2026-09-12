@@ -51,7 +51,7 @@ const ThemeToggle = () => {
                 </span>
             }
             {
-                user && <span className='text-accent dark:text-brand'>{JSON.parse(user).folder && JSON.parse(user).folder.split('__').at(-1).replaceAll('_', ' ')}</span>
+                user && <span className='text-accent dark:text-brand hidden md:block'>{JSON.parse(user).folder && JSON.parse(user).folder.split('__').at(-1).replaceAll('_', ' ')}</span>
             }
                 <span className='hidden md:flex'>|</span>
                 <Button variant="flat" size="icon" onClick={toggleTheme} className="pt-1">
