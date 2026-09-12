@@ -5,9 +5,10 @@ import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrig
 import { Textarea } from '../../components/ui/textarea';
 import { Button } from '../../components/ui/button';
 import { toast } from 'sonner';
-import { createFolder, listActivityTypes } from '../../utils/folders';
+import { createFolder, listActivityTypes, listProgramAreas } from '../../utils/folders';
 import ComboboxComponent from '../../components/combobox-component';
 import CheckIfActivity from './check-if-activity';
+import { generateTwoDigitRange, getFiscalYear, getNextQuarter } from '../../utils/functions';
 
 const NewFolder = ({ parent_folder, foldertype, setFilecreated }) => {
 
@@ -22,7 +23,11 @@ const NewFolder = ({ parent_folder, foldertype, setFilecreated }) => {
     const [isLoading, setIsLoading] = useState(false);
     const [activity_types, setActivity_types] = useState();
     const [if_activity, setIf_activity] = useState(true)
-
+    const [fy, setFy] = useState(getFiscalYear(new Date()));
+    const [quarter, setQuarter] = useState(getNextQuarter());
+    const [program_area, setProgram_area] = useState();
+    const [program_areas, setProgram_areas] = useState();
+    const fys = generateTwoDigitRange(4);
 
     const processFoldername = () => {
         let foldername;
@@ -40,7 +45,10 @@ const NewFolder = ({ parent_folder, foldertype, setFilecreated }) => {
             folder_type,
             accessibility,
             parent_folder,
-            description
+            description,
+            fy,
+            quarter,
+            program_area
         }
 
         //console.log(data);
@@ -68,6 +76,10 @@ const NewFolder = ({ parent_folder, foldertype, setFilecreated }) => {
         listActivityTypes(token, setActivity_types, setError, setIsLoading)
     }, [record])
 
+    useEffect(() => {
+            listProgramAreas(token, setProgram_areas, setError, setIsLoading)
+    }, [record])
+
     return (
         <div>
         {
@@ -83,6 +95,41 @@ const NewFolder = ({ parent_folder, foldertype, setFilecreated }) => {
                     className="h-14 bg-input border-border focus:ring-2 focus:ring-primary/30 focus:border-primary transition rounded-none"
                     required
                 /> 
+                <ComboboxComponent 
+                    comboOptions={program_areas} 
+                    value={program_area} 
+                    setValue={setProgram_area} 
+                    placeholder={isLoading ? "fetching..." : "Search program area"}  
+                    resource="program area"
+                />
+                <div className='flex items-center gap-4'>
+                    <ComboboxComponent 
+                        comboOptions={fys} 
+                        value={fy} 
+                        setValue={setFy} 
+                        placeholder={isLoading ? "fetching..." : "Search fiscal year"}  
+                        resource="fiscal year"
+                    />
+                    <Select
+                        value={quarter} // Reflects the current state
+                        onValueChange={setQuarter} // Updates the state on selection
+                    >
+                        <SelectTrigger 
+                            className="h-14 bg-input border-border focus:ring-2 focus:ring-primary/30 focus:border-primary transition rounded-none"
+                        >
+                            <SelectValue placeholder="Quarter" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectGroup>
+                                <SelectLabel>Quarter</SelectLabel>
+                                <SelectItem value="Q1">Q1</SelectItem>
+                                <SelectItem value="Q2">Q2</SelectItem>
+                                <SelectItem value="Q3">Q3</SelectItem>
+                                <SelectItem value="Q4">Q4</SelectItem>
+                            </SelectGroup>
+                        </SelectContent>
+                    </Select>
+                </div>
             {
                 foldertype !== 'system' &&
                 <ComboboxComponent 

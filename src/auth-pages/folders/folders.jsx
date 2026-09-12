@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useRef, useState } from 'react'
+import React, { useContext, useEffect, useMemo, useRef, useState } from 'react'
 import PageHeader from '../../components/page-header'
 import { ArrowLeft, ArrowLeftToLine, ChevronFirst, ChevronLast, ChevronLeft, ChevronRight, CircleX, CloudUpload, Edit, Ellipsis, File, FileIcon, FileSearchCorner, FileText, FolderOpen, FolderPlusIcon, FolderSearch, Forward, House, LayoutGrid, Link, List, PlusCircleIcon, PlusIcon, ReceiptText, UserPlus, UserRoundCog, X } from 'lucide-react'
 import FolderIcon from '../../components/folder-icon'
@@ -6,7 +6,7 @@ import UserIcon from '../../components/user-icon'
 import { Dialog, DialogContent, DialogDescription, DialogTitle, DialogTrigger } from '../../components/ui/dialog'
 import NewFolder from './new-folder'
 import { AppContext } from '../../context/AppContext'
-import { deleteAction, fetchFolders } from '../../utils/folders'
+import { deleteAction, fetchFolders, listProgramAreas } from '../../utils/folders'
 import SkeletonComponent from '../../components/skeleton-component'
 import DataTable from '../../components/data-table'
 import FolderUsers from './folder-users'
@@ -17,6 +17,9 @@ import { useSearchParams } from 'react-router-dom'
 import RenameFolder from './rename-folder'
 import { toast } from 'sonner'
 import GroupadminsDialog from './groupadmins-dialog'
+import { generateTwoDigitRange, getFiscalYear, getNextQuarter } from '../../utils/functions'
+import ComboboxComponent from '../../components/combobox-component'
+import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from '../../components/ui/select'
 
 const Folders = () => {
 
@@ -39,6 +42,18 @@ const Folders = () => {
     const [view, setView] = useState('list');
     const [g_admin, setG_admin] = useState();
     const userinfo = user && JSON.parse(user);
+    const [isLoading, setIsLoading] = useState(false);
+    const [program_areas, setProgram_areas] = useState();
+    const [program_area, setProgram_area] = useState();
+    const [quarter, setQuarter] = useState('');
+    const [fy, setFy] = useState()
+    const fys = generateTwoDigitRange(4);
+
+    const clearSelection = () => {
+        setFy();
+        setQuarter('');
+        setProgram_area();
+    }
 
     const [contextMenu, setContextMenu] = useState({
         visible: false,
@@ -250,6 +265,29 @@ const Folders = () => {
         },
     ];
 
+    const repoFilter = useMemo(() => {
+        // Ensure actionpoints is always an array
+        let filtered = Array.isArray(folders) ? folders : [];
+        
+        if ((!fy || fy === '') && (!quarter || quarter === '') && (!program_area || program_area === '')) {
+            return filtered;
+        }
+
+        if(fy && fy !== ''){
+            filtered = filtered.filter(pr => pr.fy === fy);
+        }
+
+        if(quarter && quarter !== ''){
+            filtered = filtered.filter(pr => pr.quarter === quarter);
+        }
+
+        if(program_area && program_area !== ''){
+            filtered = filtered.filter(pr => pr.program_area === program_area);
+        }
+        
+        return filtered;
+    }, [folders, quarter, fy, program_area]);
+
     if(success){
         toast.success(success, {
             className: "!bg-green-700 !text-white !border-white !font-bold",
@@ -309,7 +347,9 @@ const Folders = () => {
         item_to_delete && deleteAction(token, { id:item_to_delete }, setSuccess, setError, setDeleting)
     }, [item_to_delete])
 
-    console.log(prev, folder_name);
+    useEffect(() => {
+        listProgramAreas(token, setProgram_areas, setError, setIsLoading)
+    }, [])
 
     return (
         <div className={`w-full grid ${active_view === 'folders' ? 'gap-4' : 'gap-4'} p-4`}>
@@ -358,107 +398,151 @@ const Folders = () => {
             </div>
 
             {/** NAVIGATION BUTTONS */}
-            <div className='w-full flex justify-center items-center gap-12'>
+            <div className={`flex items-center ${userinfo.folder === 'APIN' ? 'justify-center' : 'justify-between'}`}>
             {
-                user && ((userinfo.role === 'admin' && folder_name.startsWith(userinfo.folder)) || (g_admin && g_admin.includes(userinfo.email))) && folder_type === 'system' &&
-                <Dialog>
-                    <DialogTrigger asChild>
-                        <div className='grid gap-1'>
-                            <div className='relative w-16 h-16 pl-4 py-2 border border-muted-foreground/50 rounded-xl shadow-md flex items-center justify-center cursor-pointer'>
-                                <PlusIcon className='w-4 h-4 z-20 mt-1 mr-[-32px]' />
-                                <FolderIcon size="large" />
-                            </div>
-                            <span className='text-sm mx-auto'>New group</span>
-                        </div>
-                    </DialogTrigger>
-                    <DialogContent>
-                        <DialogTitle>Create folder</DialogTitle>
-                        <NewFolder parent_folder={folder_name} foldertype="system" />
-                    </DialogContent>              
-                </Dialog>
-            }
-            {   
-                folder_type === 'system' &&
-                <div className='grid gap-1'>
-                    <div 
-                        className='relative w-16 h-16 py-2 border border-muted-foreground/50 rounded-xl shadow-md flex items-center justify-center cursor-pointer'
-                        onClick={() => setActive_view('users')}
+                userinfo.folder !== 'APIN' &&
+                <div className='flex items-center gap-4'>
+                    <ComboboxComponent 
+                        comboOptions={fys} 
+                        value={fy} 
+                        setValue={setFy} 
+                        placeholder={isLoading ? "fetching..." : "Search fiscal year"}  
+                        resource="fiscal year"
+                    />
+                    <Select
+                        value={quarter} // Reflects the current state
+                        onValueChange={setQuarter} // Updates the state on selection
                     >
-                        <UserIcon />
-                    </div>
-                    <span className='text-sm mx-auto'>Users</span>
+                        <SelectTrigger 
+                            className="h-14 bg-input border-border focus:ring-2 focus:ring-primary/30 focus:border-primary transition rounded-none"
+                        >
+                            <SelectValue placeholder="Quarter" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectGroup>
+                                <SelectLabel>Quarter</SelectLabel>
+                                <SelectItem value="Q1">Q1</SelectItem>
+                                <SelectItem value="Q2">Q2</SelectItem>
+                                <SelectItem value="Q3">Q3</SelectItem>
+                                <SelectItem value="Q4">Q4</SelectItem>
+                            </SelectGroup>
+                        </SelectContent>
+                    </Select>
+                    <ComboboxComponent 
+                        comboOptions={program_areas} 
+                        value={program_area} 
+                        setValue={setProgram_area} 
+                        placeholder={isLoading ? "fetching..." : "Search program area"}  
+                        resource="program area"
+                    />
+                    <CircleX 
+                        className='w-24 h-24 text-red-500 cursor-pointer hover:text-red-700' 
+                        onClick={() => clearSelection()}
+                    />
                 </div>
             }
-                <Dialog>
-                    <DialogTrigger asChild>
-                        <div className='grid gap-1'>
-                            <div 
-                                className='relative w-16 h-16 py-2 border border-muted-foreground/50 rounded-xl shadow-md flex items-center justify-center cursor-pointer'
-                            >
-                                <FolderOpen className='w-8 h-8 text-accent dark:text-brand' />
+                <div className='flex items-center gap-12'>
+                {
+                    user && ((userinfo.role === 'admin' && folder_name.startsWith(userinfo.folder)) || (g_admin && g_admin.includes(userinfo.email))) && folder_type === 'system' &&
+                    <Dialog>
+                        <DialogTrigger asChild>
+                            <div className='grid gap-1'>
+                                <div className='relative w-16 h-16 pl-4 py-2 border border-muted-foreground/50 rounded-xl shadow-md flex items-center justify-center cursor-pointer'>
+                                    <PlusIcon className='w-4 h-4 z-20 mt-1 mr-[-32px]' />
+                                    <FolderIcon size="large" />
+                                </div>
+                                <span className='text-sm mx-auto'>New group</span>
                             </div>
-                            <span className='text-sm mx-auto'>New folder</span>
+                        </DialogTrigger>
+                        <DialogContent>
+                            <DialogTitle>Create folder</DialogTitle>
+                            <NewFolder parent_folder={folder_name} foldertype="system" />
+                        </DialogContent>              
+                    </Dialog>
+                }
+                {   
+                    folder_type === 'system' &&
+                    <div className='grid gap-1'>
+                        <div 
+                            className='relative w-16 h-16 py-2 border border-muted-foreground/50 rounded-xl shadow-md flex items-center justify-center cursor-pointer'
+                            onClick={() => setActive_view('users')}
+                        >
+                            <UserIcon />
                         </div>
-                    </DialogTrigger>
-                    <DialogContent>
-                        <DialogTitle className="font-extralight">Document uploads folder</DialogTitle>
-                        <DialogDescription>
-                            Create a folder to upload files inside the {folder_name && folder_name.split('__').at(-1).replaceAll('_', ' ')} group
-                        </DialogDescription>
-                        <NewFolder parent_folder={folder_name} foldertype="document" />
-                    </DialogContent>
-                </Dialog>
-                <Dialog open={newfolderOpen} onOpenChange={setNewfolderpOpen}>
-                    <DialogTrigger asChild>
-                        <div className='grid gap-1'>
-                            <div className='relative w-16 h-16 py-2 border border-muted-foreground/50 rounded-xl shadow-md flex items-center justify-center cursor-pointer'>
-                                <FileText className='w-8 h-8 text-accent dark:text-brand' />
+                        <span className='text-sm mx-auto'>Users</span>
+                    </div>
+                }
+                    <Dialog>
+                        <DialogTrigger asChild>
+                            <div className='grid gap-1'>
+                                <div 
+                                    className='relative w-16 h-16 py-2 border border-muted-foreground/50 rounded-xl shadow-md flex items-center justify-center cursor-pointer'
+                                >
+                                    <FolderOpen className='w-8 h-8 text-accent dark:text-brand' />
+                                </div>
+                                <span className='text-sm mx-auto'>New folder</span>
                             </div>
-                            <span className='text-sm mx-auto'>New file</span>
-                        </div>
-                    </DialogTrigger>
-                    <DialogContent>
-                        <DialogTitle className="font-extralight">File upload</DialogTitle>
-                        <DialogDescription>
-                            Uplaod a file to the {folder_name && folder_name.split('__').at(-1).replaceAll('_', ' ')} group
-                        </DialogDescription>
-                        <NewFolder parent_folder={folder_name} foldertype="file" setFilecreated={setFilecreated} />
-                    </DialogContent>
-                </Dialog>
-            {
-                privileges && privileges !== null && 
-                <Dialog>
-                    <DialogTrigger asChild>
-                        <div className='grid gap-1'>
-                            <div 
-                                className='relative w-16 h-16 py-2 border border-muted-foreground/50 rounded-xl shadow-md flex items-center justify-center cursor-pointer'
-                            >
-                                <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-user-round-key-icon lucide-user-round-key">
-                                    <circle cx="10" cy="8" r="5" className="stroke-accent dark:stroke-brand" />
-                                    <path d="M2 21a8 8 0 0 1 12.868-6.349" className="stroke-accent dark:stroke-brand" />
-                                    <path d="M19 11v6" className="stroke-amber-500" />
-                                    <path d="M19 13h2" className="stroke-amber-500" />
-                                    <circle cx="19" cy="19" r="2" className="stroke-amber-500" />
-                                </svg>
+                        </DialogTrigger>
+                        <DialogContent>
+                            <DialogTitle className="font-extralight">Document uploads folder</DialogTitle>
+                            <DialogDescription>
+                                Create a folder to upload files inside the {folder_name && folder_name.split('__').at(-1).replaceAll('_', ' ')} group
+                            </DialogDescription>
+                            <NewFolder parent_folder={folder_name} foldertype="document" />
+                        </DialogContent>
+                    </Dialog>
+                    <Dialog open={newfolderOpen} onOpenChange={setNewfolderpOpen}>
+                        <DialogTrigger asChild>
+                            <div className='grid gap-1'>
+                                <div className='relative w-16 h-16 py-2 border border-muted-foreground/50 rounded-xl shadow-md flex items-center justify-center cursor-pointer'>
+                                    <FileText className='w-8 h-8 text-accent dark:text-brand' />
+                                </div>
+                                <span className='text-sm mx-auto'>New file</span>
                             </div>
-                            <span className='text-sm mx-auto'>Access</span>
-                        </div>
-                    </DialogTrigger>
-                    <DialogContent>
-                        <DialogTitle className="font-extralight">Access to content</DialogTitle>
-                        <DialogDescription>
-                            Accounts that have access to this folder
-                        </DialogDescription>
-                        <div className='grid gap-2 p-2 border border-muted-foreground/30 rounded-xl font-extralight'>
-                        {
-                            privileges && JSON.parse(privileges).map((priv, index) => (
-                                <span key={index}>{priv.split('__').at(-1).replaceAll('_', ' ')}</span>
-                            ))
-                        }
-                        </div>
-                    </DialogContent>
-                </Dialog>
-            }
+                        </DialogTrigger>
+                        <DialogContent>
+                            <DialogTitle className="font-extralight">File upload</DialogTitle>
+                            <DialogDescription>
+                                Uplaod a file to the {folder_name && folder_name.split('__').at(-1).replaceAll('_', ' ')} group
+                            </DialogDescription>
+                            <NewFolder parent_folder={folder_name} foldertype="file" setFilecreated={setFilecreated} />
+                        </DialogContent>
+                    </Dialog>
+                {
+                    privileges && privileges !== null && 
+                    <Dialog>
+                        <DialogTrigger asChild>
+                            <div className='grid gap-1'>
+                                <div 
+                                    className='relative w-16 h-16 py-2 border border-muted-foreground/50 rounded-xl shadow-md flex items-center justify-center cursor-pointer'
+                                >
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-user-round-key-icon lucide-user-round-key">
+                                        <circle cx="10" cy="8" r="5" className="stroke-accent dark:stroke-brand" />
+                                        <path d="M2 21a8 8 0 0 1 12.868-6.349" className="stroke-accent dark:stroke-brand" />
+                                        <path d="M19 11v6" className="stroke-amber-500" />
+                                        <path d="M19 13h2" className="stroke-amber-500" />
+                                        <circle cx="19" cy="19" r="2" className="stroke-amber-500" />
+                                    </svg>
+                                </div>
+                                <span className='text-sm mx-auto'>Access</span>
+                            </div>
+                        </DialogTrigger>
+                        <DialogContent>
+                            <DialogTitle className="font-extralight">Access to content</DialogTitle>
+                            <DialogDescription>
+                                Accounts that have access to this folder
+                            </DialogDescription>
+                            <div className='grid gap-2 p-2 border border-muted-foreground/30 rounded-xl font-extralight'>
+                            {
+                                privileges && JSON.parse(privileges).map((priv, index) => (
+                                    <span key={index}>{priv.split('__').at(-1).replaceAll('_', ' ')}</span>
+                                ))
+                            }
+                            </div>
+                        </DialogContent>
+                    </Dialog>
+                }
+                </div>
             </div>
 
             {/** MAIN CONTENT */}
@@ -467,7 +551,7 @@ const Folders = () => {
                 <div className='w-full p-6 bg-background rounded-2xl overflow-auto'>
                 {
                     loading || !folders ? <SkeletonComponent /> :
-                    <DataTable data={folders} columns={columns} filterArrs={datafilters} />
+                    repoFilter && <DataTable data={repoFilter} columns={columns} filterArrs={datafilters} />
                 }  
                 </div> :
                 <FolderUsers setActive_view={setActive_view} foldername={folder_name} />

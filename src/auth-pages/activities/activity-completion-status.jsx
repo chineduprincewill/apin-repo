@@ -9,7 +9,11 @@ const ActivityCompletionStatus = ({ id }) => {
     const [error, setError] = useState();
     const [isLoading, setIsLoading] = useState(false);
 
-    console.log(percentage)
+    const getPercColor = (perc) => {
+        if (perc < 40) return "text-red-600";
+        if (perc < 70) return "text-amber-600";
+        return "text-green-600";
+    }
 
     useEffect(() => {
         getActivityCompletionStatus(token, { id }, setPercentage, setError, setIsLoading)
@@ -25,7 +29,7 @@ const ActivityCompletionStatus = ({ id }) => {
                 <span className="h-2 w-2 rounded-full bg-blue-400 animate-bounce" /> 
             </div>
             :
-            <span>{percentage} %</span>
+            <span className={`${getPercColor(percentage)} text-lg`}>{percentage} %</span>
         }
         </div>
     )

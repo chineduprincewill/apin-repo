@@ -23,6 +23,13 @@ const FileDetail = ({ id, brief, creator, privileges }) => {
     const data = { id };
     const [activetab, setActivetab] = useState('summary');
 
+    const options = [
+        { value: "", label: "All", color: "muted-foreground" },
+        { value: "High", label: "High", color: "red-600" },     // red-600
+        { value: "Medium", label: "Medium", color: "orange-500" }, // orange-600
+        { value: "Low", label: "Low", color: "green-600" },       // green-600
+    ];
+
     function getPriorityIcon(priority) {
         switch (priority) {
           case "High":
@@ -143,17 +150,23 @@ const FileDetail = ({ id, brief, creator, privileges }) => {
                             actionpoints && actionpoints.length > 0 ? actionpoints.map(act => (
                                 <div 
                                     key={act.id} 
-                                    className='flex items-center justify-between mb-4 cursor-pointer pb-2 border-b border-muted-foreground/20'
+                                    className='grid grid-cols-12 mb-4 cursor-pointer pb-2 border-b border-muted-foreground/20'
                                 >
-                                    <div className='flex items-center gap-2'>
+                                    <div className='col-span-1 flex justify-center items-center'>
                                     {
-                                        getPriorityIcon(act.priority)
+                                        options.map((option, index) => (
+                                            act.priority === option.value &&
+                                            <div key={index} className={`w-4 h-4 rounded-full ${act.priority === option.value && 'bg-'+option.color} cursor-pointer`} />
+                                        ))
                                     }
+                                    </div>
+                                    <div className='col-span-10'>
                                         <div className='grid gap-0'>
                                             <span className='hover:text-muted-foreground font-extralight leading-tight'>{act?.action_point}</span>
                                             <span className='text-xs text-muted-foreground hover:text-muted-foreground/50 font-extralight'>Action by {act.responsible.replaceAll(',', ' ')} not later than {format(act.timeline, 'MMMM do, yyyy')}</span>
                                         </div>
                                     </div>
+                                    <div className='col-span-1 flex justify-end items-center'>
                                     {
                                         user && JSON.parse(user).email === act.created_by &&
                                         <Dialog>
@@ -166,6 +179,7 @@ const FileDetail = ({ id, brief, creator, privileges }) => {
                                             </DialogContent>
                                         </Dialog>
                                     }
+                                    </div>
                                 </div>
                             )) : <span className='text-muted-foreground/30'>No action entered yet</span>
                         }
