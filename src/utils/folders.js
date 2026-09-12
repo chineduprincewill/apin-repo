@@ -1162,3 +1162,39 @@ export const deleteResource = async (token, data, setSuccess, setError, setDelet
         setDeleting(false);
     }
 };
+
+export const closeAction = async (token, data, setSuccess, setError, setClosing) => {
+    setClosing(true);
+    try {
+        if (!token || typeof token !== "string") {
+            throw new Error("missing_token");
+        }
+        const response = await axios.post(`${API_BASE}/close-action`, data, {
+            headers: {
+                Accept: "application/json",
+                // Remove Content-Type for GET — may trigger preflight unnecessarily
+                Authorization: `Bearer ${token.trim()}`,
+            },
+            // withCredentials: true, // uncomment if the backend expects cookies
+        });
+        //console.log(response.data);
+        setSuccess(response.data);
+    } catch (err) {
+        if (err.message === "missing_token") {
+            setError("Authorization token not provided");
+        } else if (!err?.response) {
+            setError("No response from server");
+        } else {
+            // Prefer server message, normalize to string
+            const msg =
+            err.response.data?.message ||
+            err.response.data?.error ||
+            JSON.stringify(err.response.data) ||
+            `Request failed (${err.response.status})`;
+            console.log("Server response:", err.response);
+            setError(msg);
+        }
+    } finally {
+        setClosing(false);
+    }
+};

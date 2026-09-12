@@ -1,10 +1,10 @@
 import React, { useContext, useEffect, useMemo, useState } from 'react'
 import { AppContext } from '../../context/AppContext';
-import { getUserActionpoints } from '../../utils/folders';
+import { closeAction, getUserActionpoints } from '../../utils/folders';
 import SkeletonComponent from '../../components/skeleton-component';
 import { format } from 'date-fns';
 import { Dialog, DialogContent, DialogTitle, DialogTrigger } from '../../components/ui/dialog';
-import { CircleCheck, ClipboardClock, FileSearchCorner, LoaderCircle, MessageCircleMore, PenLine } from 'lucide-react';
+import { CircleCheck, CircleX, ClipboardClock, FileSearchCorner, LoaderCircle, MessageCircleMore, PenLine } from 'lucide-react';
 import DataTable from '../../components/data-table';
 import { statusColor } from '../../utils/functions';
 import UpdateStatus from './update-status';
@@ -14,10 +14,11 @@ import { RadioGroup, RadioGroupItem } from '../../components/ui/radio-group';
 import { Label } from '../../components/ui/label';
 import { cn } from "@/lib/utils";
 import PriorityOptions from '../../components/priority-options';
+import { toast } from 'sonner';
 
 const ActionPoints = () => {
 
-    const { token, user, record, logout } = useContext(AppContext);
+    const { token, user, record, refreshRecord } = useContext(AppContext);
     const [actionpoints, setActionpoints] = useState();
     const [error, setError] = useState();
     const [loading, setLoading] = useState(false);
@@ -25,6 +26,10 @@ const ActionPoints = () => {
     const [totalbacklog, setTotalbacklog] = useState();
     const [updated, setUpdated] = useState(0);
     const [priority, setPriority] = useState('High');
+    const userinfo = JSON.parse(user);
+    const [item, setItem] = useState();
+    const [closing, setClosing] = useState(false)
+    const [success, setSuccess] = useState();
 
     const hasDatePassed = (dateString) => {
         const date = new Date(dateString);
@@ -175,6 +180,21 @@ const ActionPoints = () => {
               return (
                 <div className="w-full flex items-center justify-end gap-3">
                 {
+                    item && item === fld.id && closing &&
+                    <div className="flex items-center gap-1.5">
+                        <span className="h-2 w-2 rounded-full bg-red-600 animate-bounce [animation-delay:-0.3s]" />
+                        <span className="h-2 w-2 rounded-full bg-red-600 animate-bounce [animation-delay:-0.15s]" />
+                        <span className="h-2 w-2 rounded-full bg-red-600 animate-bounce" /> 
+                    </div>
+                }
+                {
+                    user && (userinfo.email === fld.created_by || (fld.folder_name.startsWith(userinfo.folder) && userinfo.role === 'admin')) && fld.status === 'completed' &&
+                    <CircleX 
+                        className='w-4 h-4 text-red-500 hover:text-red-700 cursor-pointer' 
+                        onClick={() => close(fld.id, fld.folder_title)}
+                    />
+                }
+                {
                     user && fld.responsible.includes(JSON.parse(user).email) &&
                     <Dialog>
                         <DialogTrigger asChild>
@@ -264,6 +284,33 @@ const ActionPoints = () => {
         return backlogs;
     }
 
+    const close = (id, title) => {
+        if(window.confirm(`Are you sure you want to close ${title}`)){
+            setItem(id);
+
+            const data = {
+                id
+            }
+
+            closeAction(token, data, setSuccess, setError, setClosing);
+        }
+    }
+
+    if(success){
+        toast.success(success, {
+            className: "!bg-green-700 !text-white !border-white !font-bold",
+            descriptionClassName: "!text-green-700",
+        });
+        setItem();
+        refreshRecord(Date.now());
+        setSuccess();
+    }
+
+    if(error){
+        alert(JSON.stringify(error))
+        setError();
+    }
+
     useEffect(() => {
         getUserActionpoints(token, setActionpoints, setError, setLoading)
     }, [record])
@@ -272,7 +319,7 @@ const ActionPoints = () => {
         setTotalbacklog(getBacklogCount());
     }, [actionpoints])
 
-    console.log(totalbacklog);
+    console.log(actionpoints);
 
     return (
         <div className='w-full grid pb-4 bg-background rounded-2xl'>
