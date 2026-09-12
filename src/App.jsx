@@ -28,6 +28,7 @@ import RequestPage from "./public/manage-requests/request-page";
 import Requests from "./auth-pages/procurement-requests/requests";
 import Folders from "./auth-pages/folders/folders";
 import Activities from "./auth-pages/activities/activities";
+import SystemSettings from "./auth-pages/settings/system-settings";
 
 function App() {
 
@@ -57,6 +58,7 @@ function App() {
                     <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
                     <Route path="/repository" element={<ProtectedRoute><Folders /></ProtectedRoute>} />
                     <Route path="/activities" element={<ProtectedRoute><Activities /></ProtectedRoute>} />
+                    <Route path="/settings" element={<ProtectedRoute><SystemSettings /></ProtectedRoute>} />
                   </Route>
               </Routes>
             </Router>

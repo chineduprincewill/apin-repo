@@ -910,6 +910,42 @@ export const listActivityTypes = async (token, setActivity_types, setError, setI
     }
 };
 
+export const allActivityTypes = async (token, setActivity_types, setError, setIsLoading) => {
+    setIsLoading(true);
+    try {
+        if (!token || typeof token !== "string") {
+            throw new Error("missing_token");
+        }
+        const response = await axios.get(`${API_BASE}/activity-types`, {
+            headers: {
+                Accept: "application/json",
+                // Remove Content-Type for GET — may trigger preflight unnecessarily
+                Authorization: `Bearer ${token.trim()}`,
+            },
+            // withCredentials: true, // uncomment if the backend expects cookies
+        });
+        //console.log(response.data);
+        setActivity_types(response.data);
+    } catch (err) {
+        if (err.message === "missing_token") {
+            setError("Authorization token not provided");
+        } else if (!err?.response) {
+            setError("No response from server");
+        } else {
+            // Prefer server message, normalize to string
+            const msg =
+            err.response.data?.message ||
+            err.response.data?.error ||
+            JSON.stringify(err.response.data) ||
+            `Request failed (${err.response.status})`;
+            console.log("Server response:", err.response);
+            setError(msg);
+        }
+    } finally {
+        setIsLoading(false);
+    }
+};
+
 export const listProgramAreas = async (token, setProgram_areas, setError, setIsLoading) => {
     setIsLoading(true);
     try {
@@ -917,6 +953,42 @@ export const listProgramAreas = async (token, setProgram_areas, setError, setIsL
             throw new Error("missing_token");
         }
         const response = await axios.get(`${API_BASE}/list-program-areas`, {
+            headers: {
+                Accept: "application/json",
+                // Remove Content-Type for GET — may trigger preflight unnecessarily
+                Authorization: `Bearer ${token.trim()}`,
+            },
+            // withCredentials: true, // uncomment if the backend expects cookies
+        });
+        //console.log(response.data);
+        setProgram_areas(response.data);
+    } catch (err) {
+        if (err.message === "missing_token") {
+            setError("Authorization token not provided");
+        } else if (!err?.response) {
+            setError("No response from server");
+        } else {
+            // Prefer server message, normalize to string
+            const msg =
+            err.response.data?.message ||
+            err.response.data?.error ||
+            JSON.stringify(err.response.data) ||
+            `Request failed (${err.response.status})`;
+            console.log("Server response:", err.response);
+            setError(msg);
+        }
+    } finally {
+        setIsLoading(false);
+    }
+};
+
+export const allProgramAreas = async (token, setProgram_areas, setError, setIsLoading) => {
+    setIsLoading(true);
+    try {
+        if (!token || typeof token !== "string") {
+            throw new Error("missing_token");
+        }
+        const response = await axios.get(`${API_BASE}/program-areas`, {
             headers: {
                 Accept: "application/json",
                 // Remove Content-Type for GET — may trigger preflight unnecessarily
@@ -1051,5 +1123,42 @@ export const getActivityCompletionStatus = async (token, data, setPercentage, se
         }
     } finally {
         setIsLoading(false);
+    }
+};
+
+
+export const deleteResource = async (token, data, setSuccess, setError, setDeleting) => {
+    setDeleting(true);
+    try {
+        if (!token || typeof token !== "string") {
+            throw new Error("missing_token");
+        }
+        const response = await axios.post(`${API_BASE}/delete-item`, data, {
+            headers: {
+                Accept: "application/json",
+                // Remove Content-Type for GET — may trigger preflight unnecessarily
+                Authorization: `Bearer ${token.trim()}`,
+            },
+            // withCredentials: true, // uncomment if the backend expects cookies
+        });
+        //console.log(response.data);
+        setSuccess(response.data);
+    } catch (err) {
+        if (err.message === "missing_token") {
+            setError("Authorization token not provided");
+        } else if (!err?.response) {
+            setError("No response from server");
+        } else {
+            // Prefer server message, normalize to string
+            const msg =
+            err.response.data?.message ||
+            err.response.data?.error ||
+            JSON.stringify(err.response.data) ||
+            `Request failed (${err.response.status})`;
+            console.log("Server response:", err.response);
+            setError(msg);
+        }
+    } finally {
+        setDeleting(false);
     }
 };

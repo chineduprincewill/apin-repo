@@ -24,6 +24,7 @@ import {
   DatabaseZap,
   FolderOpen,
   Activity,
+  Cog,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "../../hooks/useAuth";
@@ -44,6 +45,7 @@ const Sidebar = ({ isOpen, onClose, isCollapsed, onCollapsedChange }) => {
         { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
         { href: "/repository", label: "Repository", icon: FolderOpen },
         { href: "/activities", label: "Activities", icon: Activity },
+        { href: "/settings", label: "Settings", icon: Cog },
     ];
 
     const staffNavItems = [
@@ -52,7 +54,7 @@ const Sidebar = ({ isOpen, onClose, isCollapsed, onCollapsedChange }) => {
         { href: "/activities", label: "Activities", icon: Activity },
     ];
 
-    const navItems = userdata?.role === 'admin' ? adminNavItems : staffNavItems;
+    const navItems = (userdata?.role === 'admin' && userdata?.folder === 'APIN') ? adminNavItems : staffNavItems;
 
     const isActive = (href) => location.pathname === href;
 
