@@ -312,8 +312,8 @@ const ActionPoints = () => {
     }
 
     useEffect(() => {
-        getUserActionpoints(token, setActionpoints, setError, setLoading)
-    }, [record])
+        token && getUserActionpoints(token, setActionpoints, setError, setLoading)
+    }, [record, token])
 
     useEffect(() => {
         setTotalbacklog(getBacklogCount());

@@ -526,7 +526,7 @@ export const getUserActionpoints = async (token, setActionpoints, setError, setL
         setActionpoints(response.data);
     } catch (err) {
         if (err.message === "missing_token") {
-            setError("Authorization token not provided");
+            setError("Authorization token not provided 123");
         } else if (!err?.response) {
             setError("No response from server");
         } else {
