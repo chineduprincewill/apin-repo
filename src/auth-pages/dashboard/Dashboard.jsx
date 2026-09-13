@@ -11,6 +11,8 @@ import ActionPoints from './action-points';
 import SvgLoader from '../../components/svg-loader';
 import { Dialog, DialogContent, DialogTitle, DialogTrigger } from '../../components/ui/dialog';
 import NotificationsDialog from '../notifications/notifications-dialog';
+import { useNavigate } from 'react-router-dom';
+import { View } from 'lucide-react';
 
 const Dashboard = () => {
 
@@ -19,6 +21,8 @@ const Dashboard = () => {
     const [error, setError] = useState();
     const [loading, setLoading] = useState(false);
     const [statistics, setStatistics] = useState();
+    const [view_summary, setView_summary] = useState(true)
+    const navigate = useNavigate();
 
     useEffect(() => {
         getUserStatistics(token, setStatistics, setError, setLoading);
@@ -35,6 +39,8 @@ const Dashboard = () => {
             user && user?.category === 'vendor' ? 
             <VendorDashboard /> : <SystemDashboard />*/}
             <div className='grid gap-4'>
+            {
+                view_summary ? 
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {/* Stats Cards */}
                     <div className="bg-background border border-border rounded-sm p-6">
@@ -57,8 +63,11 @@ const Dashboard = () => {
                                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-activity-icon lucide-activity"><path d="M22 12h-2.48a2 2 0 0 0-1.93 1.46l-2.35 8.36a.25.25 0 0 1-.48 0L9.24 2.18a.25.25 0 0 0-.48 0l-2.35 8.36A2 2 0 0 1 4.49 12H2"/></svg>
                             </div>
                         </div>
-                        <p className="text-xs text-muted-foreground mt-4">
-                        +12% from last month
+                        <p 
+                            className="text-xs text-muted-foreground hover:text-foreground mt-4 cursor-pointer"
+                            onClick={() => navigate('/activities')}
+                        >
+                            more...
                         </p>
                     </div>
 
@@ -82,8 +91,11 @@ const Dashboard = () => {
                                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-list-todo-icon lucide-list-todo"><path d="M13 5h8"/><path d="M13 12h8"/><path d="M13 19h8"/><path d="m3 17 2 2 4-4"/><rect x="3" y="4" width="6" height="6" rx="1"/></svg>
                             </div>
                         </div>
-                        <p className="text-xs text-accent mt-4 capitalize">
-                        Uncompleted tasks...
+                        <p 
+                            className="text-xs text-accent hover:text-accent-foreground mt-4 capitalize cursor-pointer"
+                            onClick={() => setView_summary(false)}
+                        >
+                        view tasks...
                         </p>
                     </div>
 
@@ -119,7 +131,17 @@ const Dashboard = () => {
                         +4% from last month
                         </p>
                     </div>
-                </div>    
+                </div> 
+                :
+                <div 
+                    className='w-full flex items-center gap-1 px-2 py-1 bg-gradient-to-b from-gray-300 to-background dark:from-blue-950 dark:to-background cursor-pointer hover:text-muted-foreground text-foreground'
+                    onClick={() => setView_summary(true)}
+                >
+                    <View className='w-4 h-4 font-extralight mt-0.5' />
+                    <span className='font-extralight'>Summary</span>
+                </div>
+            }
+                   
             </div>
             <div className="h-px bg-gradient-to-r from-transparent via-blue-950 dark:via-white to-transparent"></div>
             <ActionPoints />

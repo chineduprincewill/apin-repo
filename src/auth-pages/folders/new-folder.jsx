@@ -95,6 +95,8 @@ const NewFolder = ({ parent_folder, foldertype, setFilecreated }) => {
                     className="h-14 bg-input border-border focus:ring-2 focus:ring-primary/30 focus:border-primary transition rounded-none"
                     required
                 /> 
+            {
+                foldertype !== "system" &&
                 <ComboboxComponent 
                     comboOptions={program_areas} 
                     value={program_area} 
@@ -102,6 +104,9 @@ const NewFolder = ({ parent_folder, foldertype, setFilecreated }) => {
                     placeholder={isLoading ? "fetching..." : "Search program area"}  
                     resource="program area"
                 />
+            }  
+            {
+                foldertype !== "system" &&
                 <div className='flex items-center gap-4'>
                     <ComboboxComponent 
                         comboOptions={fys} 
@@ -130,6 +135,8 @@ const NewFolder = ({ parent_folder, foldertype, setFilecreated }) => {
                         </SelectContent>
                     </Select>
                 </div>
+            }
+                
             {
                 foldertype !== 'system' &&
                 <ComboboxComponent 
