@@ -17,7 +17,7 @@ const NewFolder = ({ parent_folder, foldertype, setFilecreated }) => {
     const [error, setError] = useState();
     const [folder_title, setFolder_title] = useState();
     const [folder_type, setFolder_type] = useState(foldertype ? foldertype : 'system');
-    const [accessibility, setAccecibility] = useState();
+    const [accessibility, setAccecibility] = useState('private');
     const [description, setDescription] = useState();
     const [activity, setActivity] = useState();
     const [isLoading, setIsLoading] = useState(false);

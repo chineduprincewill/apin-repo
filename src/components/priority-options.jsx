@@ -3,10 +3,10 @@ import React from 'react'
 const PriorityOptions = ({ setPriority, priority }) => {
 
     const options = [
-        { value: "", label: "All", color: "muted-foreground" },
         { value: "High", label: "High", color: "red-600" },     // red-600
         { value: "Medium", label: "Medium", color: "orange-500" }, // orange-600
         { value: "Low", label: "Low", color: "green-600" },       // green-600
+        { value: "", label: "None", color: "muted-foreground" },
     ];
 
     return (

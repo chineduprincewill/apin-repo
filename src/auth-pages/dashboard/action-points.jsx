@@ -354,7 +354,10 @@ const ActionPoints = () => {
                 </div>
                 
             </div>
-            <PriorityOptions setPriority={setPriority} priority={priority} />
+            <div className='flex items-center gap-0 px-4'>
+                <span>Priority</span>
+                <PriorityOptions setPriority={setPriority} priority={priority} />   
+            </div>
             <div className='w-full px-4 overflow-x-scroll'>
             {
                 loading || !actionpoints ? <SkeletonComponent /> :

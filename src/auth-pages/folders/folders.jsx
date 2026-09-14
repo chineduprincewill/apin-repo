@@ -31,7 +31,7 @@ const Folders = () => {
     const [folder_name, setFolder_name] = useState(searchParams.get('foldername') ? searchParams.get('foldername') : (user && JSON.parse(user)?.folder));
     const [folder_type, setFolder_type] = useState('system');
     const [prev, setPrev] = useState();
-    const [active_view, setActive_view] = useState('folders')
+    const [active_view, setActive_view] = useState(searchParams.get('active_view') ? searchParams.get('active_view') :'folders')
     const [filecreated, setFilecreated] = useState();
     const [isOpen, setIsOpen] = useState(false);
     const [newfolderOpen, setNewfolderpOpen] = useState(false);
@@ -472,11 +472,13 @@ const Folders = () => {
                         <span className='text-sm mx-auto'>Users</span>
                     </div>
                 }
-                    <Dialog>
+                {
+                     user && (folder_name.startsWith(userinfo.folder) || g_admin && g_admin.includes(userinfo.email) || privileges && privileges.includes(userinfo.email)) &&
+                     <Dialog>
                         <DialogTrigger asChild>
                             <div className='grid gap-1'>
                                 <div 
-                                    className='relative w-16 h-16 py-2 border border-muted-foreground/50 rounded-xl shadow-md flex items-center justify-center cursor-pointer'
+                                    className='relative w-16 h-16 py-2 border border-muted-foreground/50 rounded-xl shadow-md flex items-center justify-center cursor-pointer hover:bg-muted-foreground/20'
                                 >
                                     <FolderOpen className='w-8 h-8 text-accent dark:text-brand' />
                                 </div>
@@ -491,10 +493,13 @@ const Folders = () => {
                             <NewFolder parent_folder={folder_name} foldertype="document" />
                         </DialogContent>
                     </Dialog>
+                }
+                {
+                    user && (folder_name.startsWith(userinfo.folder) || g_admin && g_admin.includes(userinfo.email) || privileges && privileges.includes(userinfo.email)) &&
                     <Dialog open={newfolderOpen} onOpenChange={setNewfolderpOpen}>
                         <DialogTrigger asChild>
                             <div className='grid gap-1'>
-                                <div className='relative w-16 h-16 py-2 border border-muted-foreground/50 rounded-xl shadow-md flex items-center justify-center cursor-pointer'>
+                                <div className='relative w-16 h-16 py-2 border border-muted-foreground/50 rounded-xl shadow-md flex items-center justify-center cursor-pointer hover:bg-muted-foreground/20'>
                                     <FileText className='w-8 h-8 text-accent dark:text-brand' />
                                 </div>
                                 <span className='text-sm mx-auto'>New file</span>
@@ -508,13 +513,15 @@ const Folders = () => {
                             <NewFolder parent_folder={folder_name} foldertype="file" setFilecreated={setFilecreated} />
                         </DialogContent>
                     </Dialog>
+                }
+                    
                 {
                     privileges && privileges !== null && 
                     <Dialog>
                         <DialogTrigger asChild>
                             <div className='grid gap-1'>
                                 <div 
-                                    className='relative w-16 h-16 py-2 border border-muted-foreground/50 rounded-xl shadow-md flex items-center justify-center cursor-pointer'
+                                    className='relative w-16 h-16 py-2 border border-muted-foreground/50 rounded-xl shadow-md flex items-center justify-center cursor-pointer hover:bg-muted-foreground/20'
                                 >
                                     <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-user-round-key-icon lucide-user-round-key">
                                         <circle cx="10" cy="8" r="5" className="stroke-accent dark:stroke-brand" />

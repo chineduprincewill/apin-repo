@@ -242,9 +242,12 @@ const Activities = () => {
     
     return (
         <div className={`w-full grid px-4`}>
-            <div className='w-full flex items-center justify-between'> 
-                <div className='flex items-center gap-4'>
-                    <PriorityOptions setPriority={setPriority} priority={priority}  />
+            <div className='w-full grid md:flex md:items-center md:justify-between gap-4 mb-4 md:mb-0'> 
+                <div className='grid md:flex md:items-center gap-4'>
+                    <div className='flex items-center gap-0 px-4'>
+                        <span>Priority</span>
+                        <PriorityOptions setPriority={setPriority} priority={priority}  />
+                    </div>
                     <ComboboxComponent 
                         comboOptions={fys} 
                         value={fy} 
@@ -262,7 +265,7 @@ const Activities = () => {
                 </div>
                 <Dialog>
                     <DialogTrigger asChild>
-                        <div className='flex items-center gap-1 pl-4 pr-5 py-1 rounded-full cursor-pointer shadow-md bg-accent hover:bg-accent/90 dark:bg-brand dark:hover:bg-brand/90 text-white dark:text-accent'>
+                        <div className='max-w-max flex items-center gap-1 pl-4 pr-5 py-1 rounded-full cursor-pointer shadow-md bg-accent hover:bg-accent/90 dark:bg-brand dark:hover:bg-brand/90 text-white dark:text-accent'>
                             <Plus className='w-5 h-5' />
                             <span>New</span>
                         </div>

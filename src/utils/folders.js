@@ -1198,3 +1198,76 @@ export const closeAction = async (token, data, setSuccess, setError, setClosing)
         setClosing(false);
     }
 };
+
+
+export const pendingActivation = async (token, setPendingCount, setError, setClosing) => {
+    setClosing(true);
+    try {
+        if (!token || typeof token !== "string") {
+            throw new Error("missing_token");
+        }
+        const response = await axios.get(`${API_BASE}/pending-activation`, {
+            headers: {
+                Accept: "application/json",
+                // Remove Content-Type for GET — may trigger preflight unnecessarily
+                Authorization: `Bearer ${token.trim()}`,
+            },
+            // withCredentials: true, // uncomment if the backend expects cookies
+        });
+        //console.log(response.data);
+        setPendingCount(response.data);
+    } catch (err) {
+        if (err.message === "missing_token") {
+            setError("Authorization token not provided");
+        } else if (!err?.response) {
+            setError("No response from server");
+        } else {
+            // Prefer server message, normalize to string
+            const msg =
+            err.response.data?.message ||
+            err.response.data?.error ||
+            JSON.stringify(err.response.data) ||
+            `Request failed (${err.response.status})`;
+            console.log("Server response:", err.response);
+            setError(msg);
+        }
+    } finally {
+        setClosing(false);
+    }
+};
+
+export const getRootFolders = async (token, setRootfolders, setError, setLoading) => {
+    setLoading(true);
+    try {
+        if (!token || typeof token !== "string") {
+            throw new Error("missing_token");
+        }
+        const response = await axios.get(`${API_BASE}/root-folders`, {
+            headers: {
+                Accept: "application/json",
+                // Remove Content-Type for GET — may trigger preflight unnecessarily
+                Authorization: `Bearer ${token.trim()}`,
+            },
+            // withCredentials: true, // uncomment if the backend expects cookies
+        });
+        //console.log(response.data);
+        setRootfolders(response.data);
+    } catch (err) {
+        if (err.message === "missing_token") {
+            setError("Authorization token not provided");
+        } else if (!err?.response) {
+            setError("No response from server");
+        } else {
+            // Prefer server message, normalize to string
+            const msg =
+            err.response.data?.message ||
+            err.response.data?.error ||
+            JSON.stringify(err.response.data) ||
+            `Request failed (${err.response.status})`;
+            console.log("Server response:", err.response);
+            setError(msg);
+        }
+    } finally {
+        setLoading(false);
+    }
+};

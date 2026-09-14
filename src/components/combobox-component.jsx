@@ -23,8 +23,6 @@ import NewActivityType from "../auth-pages/activities/new-activity-type"
 const ComboboxComponent = ({ comboOptions, value, setValue, placeholder, resource }) => {
     const [open, setOpen] = useState(false)
     //const [value, setValue] = useState("")
-
-    console.log(comboOptions);
   
     return (
       comboOptions &&

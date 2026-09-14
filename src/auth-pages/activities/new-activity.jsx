@@ -6,10 +6,11 @@ import { Textarea } from '../../components/ui/textarea';
 import { Button } from '../../components/ui/button';
 import { Label } from '../../components/ui/label';
 import DatePicker from '../../components/date-picker';
-import { createFolder, listActivityTypes, listProgramAreas } from '../../utils/folders';
+import { createFolder, getRootFolders, listActivityTypes, listProgramAreas } from '../../utils/folders';
 import { toast } from 'sonner';
 import ComboboxComponent from '../../components/combobox-component';
 import { generateTwoDigitRange, getFiscalYear, getNextQuarter } from '../../utils/functions';
+import { RadioGroup, RadioGroupItem } from '../../components/ui/radio-group';
 
 const NewActivity = () => {
 
@@ -17,13 +18,13 @@ const NewActivity = () => {
     const [success, setSuccess] = useState();
     const [error, setError] = useState();
     const [folder_title, setFolder_title] = useState();
-    const [accessibility, setAccecibility] = useState('public');
+    const [accessibility, setAccecibility] = useState('private');
     const [description, setDescription] = useState();
     const [activity_type, setActivity_type] = useState();
     const [start_date, setStart_date] = useState();
     const [end_date, setEnd_date] = useState();
     const [isCreating, setIsCreating] = useState(false);
-    const [parent_folder, setParent_folder] = useState(user && JSON.parse(user).folder)
+    const [parent_folder, setParent_folder] = useState()
     const [fy, setFy] = useState(getFiscalYear(new Date()));
     const [quarter, setQuarter] = useState(getNextQuarter());
     const [program_area, setProgram_area] = useState();
@@ -31,6 +32,8 @@ const NewActivity = () => {
     const [isLoading, setIsLoading] = useState(false);
     const [activity_types, setActivity_types] = useState();
     const [program_areas, setProgram_areas] = useState();
+    const [rootfolders, setRootfolders] = useState();
+    const [pvalue, setPvalue] = useState();
     const fys = generateTwoDigitRange(4);
 
     const processFoldername = () => {
@@ -61,7 +64,7 @@ const NewActivity = () => {
             end_date
         }
 
-        console.log(data);
+        //console.log(data);
         createFolder(token, data, setSuccess, setError, setIsCreating)
     }
 
@@ -95,8 +98,31 @@ const NewActivity = () => {
         listProgramAreas(token, setProgram_areas, setError, setIsLoading)
     }, [record])
 
+    useEffect(() => {
+        getRootFolders(token, setRootfolders, setError, setIsLoading)
+    }, [])
+
+    useEffect(() => {
+        setParent_folder(pvalue === 'APIN__@CARES' ? user && JSON.parse(user).folder : pvalue)
+    }, [pvalue])
+
     return (
         <form onSubmit={handleSubmit} className='grid gap-4'>
+            <RadioGroup 
+                value={pvalue} 
+                onValueChange={setPvalue} 
+                required
+                className="flex items-center gap-4"
+            >
+            {
+                rootfolders && rootfolders.map(rtf => (
+                    <div key={rtf.id} className="flex items-center gap-1">
+                        <RadioGroupItem value={rtf.folder_name} id={rtf.folder_name} />
+                        <Label htmlFor={rtf.folder_name}>{rtf.folder_title}</Label>
+                    </div>
+                ))
+            }
+            </RadioGroup>
             <Input
                 type="text"
                 placeholder="Activity title"

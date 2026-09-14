@@ -10,7 +10,7 @@ const DefaultLayout = () => {
 
     const { user } = useAuth();
     const [sidebarOpen, setSidebarOpen] = useState(false);
-    const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+    const [sidebarCollapsed, setSidebarCollapsed] = useState(true);
 
     return (
         <div className="min-h-screen bg-background">

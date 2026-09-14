@@ -5,14 +5,14 @@ import { AppContext } from '../../context/AppContext';
 import { useAuth } from '../../hooks/useAuth';
 //import SystemDashboard from './system-dashboard';
 import PageHeader from '../../components/page-header';
-import { getUserActionpoints, getUserStatistics } from '../../utils/folders';
+import { getUserActionpoints, getUserStatistics, pendingActivation } from '../../utils/folders';
 import SkeletonComponent from '../../components/skeleton-component';
 import ActionPoints from './action-points';
 import SvgLoader from '../../components/svg-loader';
 import { Dialog, DialogContent, DialogTitle, DialogTrigger } from '../../components/ui/dialog';
 import NotificationsDialog from '../notifications/notifications-dialog';
 import { useNavigate } from 'react-router-dom';
-import { View } from 'lucide-react';
+import { FileSearchCorner, Settings, UserRoundCog, View } from 'lucide-react';
 
 const Dashboard = () => {
 
@@ -22,13 +22,20 @@ const Dashboard = () => {
     const [loading, setLoading] = useState(false);
     const [statistics, setStatistics] = useState();
     const [view_summary, setView_summary] = useState(true)
+    const [pendingCount, setPendingCount] = useState(null);
     const navigate = useNavigate();
+    const url = window.location.origin+'/repository';
 
     useEffect(() => {
         getUserStatistics(token, setStatistics, setError, setLoading);
     }, [])
+
+    useEffect(() => {
+        user && JSON.parse(user).folder === 'APIN' &&
+        pendingActivation(token, setPendingCount, setError, setLoading)
+    }, [])
   
-    console.log(statistics);
+    console.log(pendingCount);
 
     return (
         <div className='w-full grid gap-4 p-4'>
@@ -41,97 +48,123 @@ const Dashboard = () => {
             <div className='grid gap-4'>
             {
                 view_summary ? 
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {/* Stats Cards */}
-                    <div className="bg-background border border-border rounded-sm p-6">
-                        <div className="flex items-start justify-between">
-                            <div>
-                                <p className="text-sm font-medium text-muted-foreground mb-1">
-                                {
-                                    user && JSON.parse(user).folder !== 'APIN' && 'Your '
-                                }
-                                Ongoing activities
-                                </p>
-                                <p className="text-2xl font-bold text-foreground">
-                                {
-                                    //fetching ? <SvgLoader /> : '34'
-                                    statistics && statistics.ongoing_activities
-                                }
-                                </p>
+                <div className='grid gap-4'>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {/* Stats Cards */}
+                        <div className="bg-background border border-border rounded-sm p-6">
+                            <div className="flex items-start justify-between">
+                                <div>
+                                    <p className="text-sm font-medium text-muted-foreground mb-1">
+                                    {
+                                        user && JSON.parse(user).folder !== 'APIN' && 'Your '
+                                    }
+                                    Ongoing activities
+                                    </p>
+                                    <p className="text-2xl font-bold text-foreground">
+                                    {
+                                        //fetching ? <SvgLoader /> : '34'
+                                        statistics && statistics.ongoing_activities
+                                    }
+                                    </p>
+                                </div>
+                                <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-activity-icon lucide-activity"><path d="M22 12h-2.48a2 2 0 0 0-1.93 1.46l-2.35 8.36a.25.25 0 0 1-.48 0L9.24 2.18a.25.25 0 0 0-.48 0l-2.35 8.36A2 2 0 0 1 4.49 12H2"/></svg>
+                                </div>
                             </div>
-                            <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-activity-icon lucide-activity"><path d="M22 12h-2.48a2 2 0 0 0-1.93 1.46l-2.35 8.36a.25.25 0 0 1-.48 0L9.24 2.18a.25.25 0 0 0-.48 0l-2.35 8.36A2 2 0 0 1 4.49 12H2"/></svg>
-                            </div>
-                        </div>
-                        <p 
-                            className="text-xs text-muted-foreground hover:text-foreground mt-4 cursor-pointer"
-                            onClick={() => navigate('/activities')}
-                        >
-                            more...
-                        </p>
-                    </div>
-
-                    <div className="bg-background border border-border rounded-sm p-6">
-                        <div className="flex items-start justify-between">
-                            <div>
-                                <p className="text-sm font-medium text-muted-foreground mb-1">
-                                {
-                                    user && JSON.parse(user).folder !== 'APIN' && 'Your '
-                                }
-                                Not completed tasks
-                                </p>
-                                <p className="text-2xl font-bold text-foreground">
-                                {
-                                    //fetching ? <SvgLoader /> : statistics && statistics?.vendorRegistrationProgress
-                                    statistics && statistics.assigned_tasks
-                                }
-                                </p>
-                            </div>
-                            <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-list-todo-icon lucide-list-todo"><path d="M13 5h8"/><path d="M13 12h8"/><path d="M13 19h8"/><path d="m3 17 2 2 4-4"/><rect x="3" y="4" width="6" height="6" rx="1"/></svg>
-                            </div>
-                        </div>
-                        <p 
-                            className="text-xs text-accent hover:text-accent-foreground mt-4 capitalize cursor-pointer"
-                            onClick={() => setView_summary(false)}
-                        >
-                        view tasks...
-                        </p>
-                    </div>
-
-                    <div className={`bg-card hover:bg-card/50 border ${statistics && statistics?.unread_notifications > 0 ? 'border-amber-500' : 'border-border'} rounded-lg p-6`}>
-                        <div className="flex items-start justify-between">
-                        <div>
-                            <p className="text-sm font-medium text-muted-foreground mb-1">
-                            Unread notifications
-                            </p>
-                            <p className="text-2xl font-bold text-brand">
-                            {
-                                statistics && statistics?.unread_notifications
-                            }
+                            <p 
+                                className="text-xs text-muted-foreground hover:text-foreground mt-4 cursor-pointer"
+                                onClick={() => navigate('/activities')}
+                            >
+                                more...
                             </p>
                         </div>
-                        <Dialog>
-                                <DialogTrigger asChild>
-                                    <div className="w-10 h-10 bg-primary/10 hover:bg-primary/20 rounded-lg flex items-center justify-center cursor-pointer">
-                                        <svg xmlns="http://www.w3.org/2000/svg" className={`w-6 h-6 ${statistics && statistics?.unread_notifications > 0 && 'text-amber-600'}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
-                                            <path d="M13.73 21a2 2 0 0 1-3.46 0" />
-                                            {statistics && statistics?.unread_notifications > 0 && <circle cx="18" cy="6" r="3" fill="red" stroke="none" />}
-                                        </svg>
+
+                        <div className="bg-background border border-border rounded-sm p-6">
+                            <div className="flex items-start justify-between">
+                                <div>
+                                    <p className="text-sm font-medium text-muted-foreground mb-1">
+                                    {
+                                        user && JSON.parse(user).folder !== 'APIN' && 'Your '
+                                    }
+                                    Not completed tasks
+                                    </p>
+                                    <p className="text-2xl font-bold text-foreground">
+                                    {
+                                        //fetching ? <SvgLoader /> : statistics && statistics?.vendorRegistrationProgress
+                                        statistics && statistics.assigned_tasks
+                                    }
+                                    </p>
+                                </div>
+                                <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-list-todo-icon lucide-list-todo"><path d="M13 5h8"/><path d="M13 12h8"/><path d="M13 19h8"/><path d="m3 17 2 2 4-4"/><rect x="3" y="4" width="6" height="6" rx="1"/></svg>
+                                </div>
+                            </div>
+                            <p 
+                                className="text-xs text-accent hover:text-accent-foreground mt-4 capitalize cursor-pointer"
+                                onClick={() => setView_summary(false)}
+                            >
+                            view tasks...
+                            </p>
+                        </div>
+
+                        <div className={`bg-card hover:bg-card/50 border ${statistics && statistics?.unread_notifications > 0 ? 'border-amber-500' : 'border-border'} rounded-lg p-6`}>
+                            <div className="flex items-start justify-between">
+                            <div>
+                                <p className="text-sm font-medium text-muted-foreground mb-1">
+                                Unread notifications
+                                </p>
+                                <p className="text-2xl font-bold text-brand">
+                                {
+                                    statistics && statistics?.unread_notifications
+                                }
+                                </p>
+                            </div>
+                            <Dialog>
+                                    <DialogTrigger asChild>
+                                        <div className="w-10 h-10 bg-primary/10 hover:bg-primary/20 rounded-lg flex items-center justify-center cursor-pointer">
+                                            <svg xmlns="http://www.w3.org/2000/svg" className={`w-6 h-6 ${statistics && statistics?.unread_notifications > 0 && 'text-amber-600'}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                                <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+                                                <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+                                                {statistics && statistics?.unread_notifications > 0 && <circle cx="18" cy="6" r="3" fill="red" stroke="none" />}
+                                            </svg>
+                                        </div>
+                                    </DialogTrigger>
+                                    <DialogContent>
+                                        <DialogTitle></DialogTitle>
+                                        <NotificationsDialog />
+                                    </DialogContent>
+                                </Dialog>
+                            </div>
+                            <p className="text-xs text-muted-foreground mt-4">
+                            +4% from last month
+                            </p>
+                        </div>
+                    </div> 
+                {
+                    user && JSON.parse(user).folder === 'APIN' && pendingCount !== null &&
+                    <div className="bg-background border border-border rounded-lg p-6">
+                        <div className={`grid grid-cols-1 gap-4`}>
+                            <div
+                                className="bg-gray-100 dark:bg-[#030f36]/50 flex items-center justify-between h-auto py-3 px-4 rounded-md"
+                            >
+                                <div>
+                                    <p className="text-lg font-extralight text-foreground">Pending Accounts</p>
+                                    <p className="text-xs text-muted-foreground hover:text-foreground mt-1 cursor-pointer">
+                                    <a href={url+`?active_view=users`}>Click here to manage accounts with pending activation status</a>
+                                    </p>
+                                </div>
+                                <a href={url+`?active_view=users`}>
+                                    <div 
+                                        className={`w-10 h-10 ${pendingCount > 0 ? 'bg-orange-600 text-white' : 'bg-muted-foreground'} rounded-lg flex items-center justify-center cursor-pointer text-3xl`}
+                                    >
+                                        <span>{pendingCount}</span>
                                     </div>
-                                </DialogTrigger>
-                                <DialogContent>
-                                    <DialogTitle></DialogTitle>
-                                    <NotificationsDialog />
-                                </DialogContent>
-                            </Dialog>
+                                </a>
+                            </div>
                         </div>
-                        <p className="text-xs text-muted-foreground mt-4">
-                        +4% from last month
-                        </p>
                     </div>
-                </div> 
+                }
+                </div>
                 :
                 <div 
                     className='w-full flex items-center gap-1 px-2 py-1 bg-gradient-to-b from-gray-300 to-background dark:from-blue-950 dark:to-background cursor-pointer hover:text-muted-foreground text-foreground'
