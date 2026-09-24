@@ -16,36 +16,11 @@ import EditFileUploads from './edit-file-uploads';
 const FileDetail = ({ id, brief, creator, privileges }) => {
 
     const { token, user, record } = useContext(AppContext);
-    const [actionpoints, setActionpoints] = useState();
     const [documents, setDocuments] = useState();
     const [error, setError] = useState();
     const [isLoading, setIsLoading] = useState(false);
     const data = { id };
-    const [activetab, setActivetab] = useState('summary');
-
-    const options = [
-        { value: "", label: "All", color: "muted-foreground" },
-        { value: "High", label: "High", color: "red-600" },     // red-600
-        { value: "Medium", label: "Medium", color: "orange-500" }, // orange-600
-        { value: "Low", label: "Low", color: "green-600" },       // green-600
-    ];
-
-    function getPriorityIcon(priority) {
-        switch (priority) {
-          case "High":
-            return <Wifi className="h-5 w-5 text-red-600" />;
-          case "Medium":
-            return <WifiHigh className="h-5 w-5 text-yellow-600" />;
-          case "Low":
-            return <WifiLow className="h-5 w-5 text-green-600" />;
-          default:
-            return null;
-        }
-    }
-
-    useEffect(() => {
-        folderActionpoints(token, data, setActionpoints, setError, setIsLoading)
-    }, [record])
+    const [activetab, setActivetab] = useState('attachment');
 
     useEffect(() => {
         folderDocuments(token, data, setDocuments, setError, setIsLoading)
@@ -76,22 +51,6 @@ const FileDetail = ({ id, brief, creator, privileges }) => {
                 </div>
                 <div 
                     className='grid gap-1 cursor-pointer hover:text-accent dark:hover:text-brand'
-                    onClick={() => setActivetab('points')}
-                >
-                    <div className='flex justify-center'>
-                        <div 
-                            className={`relative w-12 h-12 py-2 ${activetab === 'points' ? 'bg-accent dark:bg-brand text-white dark:text-accent' :  'border border-muted-foreground/50'} rounded-xl shadow-md flex items-center justify-center cursor-pointer`}
-                        >
-                            
-                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-list-icon lucide-list"><path d="M3 5h.01"/><path d="M3 12h.01"/><path d="M3 19h.01"/><path d="M8 5h13"/><path d="M8 12h13"/><path d="M8 19h13"/></svg>
-                        </div>
-                    </div>
-                    <div className='w-full flex justify-center'>
-                        <span className={`text-sm ${activetab === 'points' && 'text-accent dark:text-brand'}`}>Action points</span>
-                    </div>
-                </div>
-                <div 
-                    className='grid gap-1 cursor-pointer hover:text-accent dark:hover:text-brand'
                     onClick={() => setActivetab('attachments')}
                 >
                     <div className='flex justify-center'>
@@ -111,7 +70,7 @@ const FileDetail = ({ id, brief, creator, privileges }) => {
             <div className='w-full p-0 border border-muted-foreground/50 rounded-2xl'>
                 <div className={`gap-0 ${activetab === 'summary' ? 'grid' : 'hidden'}`}>
                     <div className='flex items-center justify-between p-3 border-b border-muted-foreground/50'>
-                        <Label className="text-lg font-extralight">Content summary</Label>
+                        <Label className="text-lg font-extralight">File description</Label>
                     {
                         user && JSON.parse(user).email === creator &&
                         <Dialog>
@@ -119,7 +78,7 @@ const FileDetail = ({ id, brief, creator, privileges }) => {
                                 <Edit className='w-5 h-5 cursor-pointer text-accent dark:text-brand' />
                             </DialogTrigger>
                             <DialogContent>
-                                <DialogTitle>Edit file summary</DialogTitle>
+                                <DialogTitle>Edit file description</DialogTitle>
                                 <EditFileSummary id={id} summary={brief} />
                             </DialogContent>
                         </Dialog>
@@ -135,59 +94,6 @@ const FileDetail = ({ id, brief, creator, privileges }) => {
                         <Button 
                             variant="outline" className="flex gap-1 items-center h-12"
                             onClick={() => setActivetab('points')}
-                        >
-                            <span>Next</span>
-                            <CircleArrowRight />
-                        </Button>
-                    </div>
-                </div>
-                <div className={`gap-0 ${activetab === 'points' ? 'grid' : 'hidden'}`}>
-                    <Label className="font-extralight text-lg p-3 border-b border-muted-foreground/50">Action points</Label>
-                    <div className='grid gap-5 p-5'>
-                        <div 
-                            className={`w-full p-2 border border-muted-foreground/20 rounded-xl h-72 overflow-y-scroll`}>
-                        {
-                            actionpoints && actionpoints.length > 0 ? actionpoints.map(act => (
-                                <div 
-                                    key={act.id} 
-                                    className='grid grid-cols-12 mb-4 cursor-pointer pb-2 border-b border-muted-foreground/20'
-                                >
-                                    <div className='col-span-1 flex justify-center items-center'>
-                                    {
-                                        options.map((option, index) => (
-                                            act.priority === option.value &&
-                                            <div key={index} className={`w-4 h-4 rounded-full ${act.priority === option.value && 'bg-'+option.color} cursor-pointer`} />
-                                        ))
-                                    }
-                                    </div>
-                                    <div className='col-span-10'>
-                                        <div className='grid gap-0'>
-                                            <span className='hover:text-muted-foreground font-extralight leading-tight'>{act?.action_point}</span>
-                                            <span className='text-xs text-muted-foreground hover:text-muted-foreground/50 font-extralight'>Action by {act.responsible.replaceAll(',', ' ')} not later than {format(act.timeline, 'MMMM do, yyyy')}</span>
-                                        </div>
-                                    </div>
-                                    <div className='col-span-1 flex justify-end items-center'>
-                                    {
-                                        user && JSON.parse(user).email === act.created_by &&
-                                        <Dialog>
-                                            <DialogTrigger asChild>
-                                                <Edit className='w-4 h-4 cursor-pointer text-accent dark:text-brand' />
-                                            </DialogTrigger>
-                                            <DialogContent>
-                                                <DialogTitle>Edit action point</DialogTitle>
-                                                <EditActionpoints a_points={act} />
-                                            </DialogContent>
-                                        </Dialog>
-                                    }
-                                    </div>
-                                </div>
-                            )) : <span className='text-muted-foreground/30'>No action entered yet</span>
-                        }
-                        </div>
-                        <Button 
-                            variant="outline" 
-                            className="flex gap-1 items-center h-12"
-                            onClick={() => setActivetab('attachments')}
                         >
                             <span>Next</span>
                             <CircleArrowRight />

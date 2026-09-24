@@ -81,7 +81,7 @@ const FolderUsers = ({ setActive_view, foldername }) => {
               //const [assignOpen, setAssignOpen] = useState(false);
     
               return (
-                user && JSON.parse(user).role === 'admin' &&
+                user && JSON.parse(user).role === 'admin' && JSON.parse(user).folder === 'APIN' &&
                 <div className="w-full flex items-center justify-end gap-3">
                 {
                     user && JSON.parse(user).folder === 'APIN' && JSON.parse(user).role === 'admin' &&
@@ -195,8 +195,6 @@ const FolderUsers = ({ setActive_view, foldername }) => {
         setNotUsers(filterNonUsers());
     }, [users, foldername])
 
-    console.log(notUsers)
-
     return (
         <div className='w-full rounded-2xl overflow-auto bg-background'>
             <div 
@@ -256,16 +254,21 @@ const FolderUsers = ({ setActive_view, foldername }) => {
                         {
                             folderUsers && folderUsers.length > 0 ?
                             (folderUsers.map(fuser => (
-                                <div className='w-full flex items-center justify-between gap-4  h-16 border-b border-muted-foreground/20'>
+                                <div className='w-full flex items-center justify-between gap-4 h-12 border-b border-muted-foreground/20'>
                                     <div className='w-full flex items-center justify-between'>
-                                        <div className='grid gap-0 w-full md:w-[45%]'>
-                                            <span className='w-full text-lg font-extralight mb-1'>{fuser.fullname}</span>
-                                            <span className='w-full text-sm font-extralight mt-[-10px]'>{fuser.role}</span>
+                                        <div className='flex items-center gap-1 md:w-[45%] font-extralight'>
+                                            <span>
+                                                {fuser.fullname}
+                                            </span>
+                                        {
+                                            fuser.role === 'admin' && 
+                                            <span className='text-muted-foreground'>| {fuser.role}</span>
+                                        }
                                         </div>
                                         <span className='w-full md:w-[45%] text-sm font-extralight'>{fuser.email}</span>
                                     </div>
                                     {
-                                        user && JSON.parse(user).role === 'admin' &&
+                                        user && JSON.parse(user).role === 'admin' && JSON.parse(user).folder === 'APIN' &&
                                         (fuser.isDraft ? 
                                         <ArrowLeft 
                                             className='text-red-600 cursor-pointer' 

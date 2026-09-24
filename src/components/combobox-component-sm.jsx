@@ -20,7 +20,7 @@ import { Dialog, DialogContent, DialogTitle, DialogTrigger } from "./ui/dialog"
 import NewActivityType from "../auth-pages/activities/new-activity-type"
 
 
-const ComboboxComponent = ({ comboOptions, value, setValue, placeholder, resource }) => {
+const ComboboxComponentSm = ({ comboOptions, value, setValue, placeholder, resource }) => {
     const [open, setOpen] = useState(false)
     //const [value, setValue] = useState("")
   
@@ -32,7 +32,7 @@ const ComboboxComponent = ({ comboOptions, value, setValue, placeholder, resourc
             variant="outline"
             role="combobox"
             aria-expanded={open}
-            className="w-full flex items-center justify-between h-14 bg-input border-border focus:ring-2 focus:ring-primary/30 focus:border-primary transition rounded-none"
+            className="w-full flex items-center justify-between h-10 bg-input border-border focus:ring-2 focus:ring-primary/30 focus:border-primary transition rounded-none"
           >
             {value
               ? comboOptions.find((cmb) => cmb.title === value)?.title
@@ -90,4 +90,4 @@ const ComboboxComponent = ({ comboOptions, value, setValue, placeholder, resourc
     )
   }
 
-export default ComboboxComponent
+export default ComboboxComponentSm

@@ -18,7 +18,7 @@ const DatePicker = ({ date, setDate, placeholder, style }) => {
                 <Button
                 variant="outline"
                 data-empty={!date}
-                className={`data-[empty=true]:text-muted-foreground w-full justify-start text-left font-normal ${style ? style : 'rounded-xl'} h-12 border border-muted-foreground/20`}
+                className={`data-[empty=true]:text-muted-foreground w-full justify-start text-left font-normal ${style ? style : 'rounded-xl h-12'} border border-muted-foreground/20`}
                 >
                 <CalendarIcon />
                 {date ? format(date, "PPP") : <span>{placeholder ? placeholder : 'Select timeline'}</span>}

@@ -45,16 +45,22 @@ const ActivityActionPoints = ({ activity_id }) => {
                         <div className='w-full grid gap-0'>
                             <div className='flex items-center gap-2'>
                                 <span className='hover:text-muted-foreground font-extralight text-sm'>
-                                        Deadline : {format(act.timeline, 'MMMM do, yyyy')}
+                                        Deadline : {act.timeline === 'Recurring' ? act.timeline : format(act.timeline, 'MMMM do, yyyy')}
                                 </span>
                             {
                                 act.priority && getPriorityIcon(act.priority)
                             }
                             </div>
                             <div className='flex items-center justify-between'>
-                                <span className='hover:text-muted-foreground font-extralight text-sm'>
-                                    {act.responsible.replaceAll(',', ', ')}
-                                </span>
+                                <div className='flex flex-wrap items-center space-x-2'>
+                                {
+                                    act.responsible && JSON.parse(act.responsible).map((resp, index) => (
+                                        <span key={index} className='hover:text-muted-foreground font-extralight text-sm'>
+                                            {resp}
+                                        </span>
+                                    ))
+                                }  
+                                </div>
                                 <span className={`${bgColor(act.status)} px-4 py-1 rounded-full text-white text-sm capitalize`}>{act.status}</span>
                             </div>
                         </div>

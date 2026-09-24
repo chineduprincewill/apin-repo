@@ -18,7 +18,7 @@ const NewActivity = () => {
     const [success, setSuccess] = useState();
     const [error, setError] = useState();
     const [folder_title, setFolder_title] = useState();
-    const [accessibility, setAccecibility] = useState('private');
+    const [accessibility, setAccecibility] = useState('public');
     const [description, setDescription] = useState();
     const [activity_type, setActivity_type] = useState();
     const [start_date, setStart_date] = useState();
@@ -108,79 +108,35 @@ const NewActivity = () => {
 
     return (
         <form onSubmit={handleSubmit} className='grid gap-4'>
+        {
+            isLoading ? <span className='text-muted-foreground italic'>loading...</span> :
             <RadioGroup 
                 value={pvalue} 
                 onValueChange={setPvalue} 
                 required
-                className="flex items-center gap-4"
+                className="flex items-center gap-4 my-2"
             >
             {
                 rootfolders && rootfolders.map(rtf => (
-                    <div key={rtf.id} className="flex items-center gap-1">
+                
+                    rtf.folder_name === 'APIN__@CARES' ?
+                    <div key={user && JSON.parse(user).folder} className="flex items-center gap-1">
+                        <RadioGroupItem value={user && JSON.parse(user).folder} id={user && JSON.parse(user).folder} />
+                        <Label htmlFor={user && JSON.parse(user).folder}>{user && JSON.parse(user).folder.split('__').at(-1).replaceAll('_', ' ')}</Label>
+                    </div>
+                    :
+                    <div key={rtf.folder_name} className="flex items-center gap-1">
                         <RadioGroupItem value={rtf.folder_name} id={rtf.folder_name} />
                         <Label htmlFor={rtf.folder_name}>{rtf.folder_title}</Label>
                     </div>
                 ))
             }
+                <div key="APIN__MDT" className="flex items-center gap-1">
+                    <RadioGroupItem value="APIN__MDT" id="APIN__MDT" />
+                    <Label htmlFor="APIN__MDT">MDT</Label>
+                </div>
             </RadioGroup>
-            <Input
-                type="text"
-                placeholder="Activity title"
-                value={folder_title}
-                onChange={(e) => setFolder_title(e.target.value)}
-                className="h-14 bg-input border-border focus:ring-2 focus:ring-primary/30 focus:border-primary transition rounded-none"
-                required
-            /> 
-            {/*<Select
-                value={activity_type} // Reflects the current state
-                onValueChange={setActivity_type} // Updates the state on selection
-            >
-                <SelectTrigger 
-                    className="h-14 bg-input border-border focus:ring-2 focus:ring-primary/30 focus:border-primary transition rounded-none"
-                >
-                    <SelectValue placeholder="Type of activity" />
-                </SelectTrigger>
-                <SelectContent>
-                    <SelectGroup>
-                        <SelectLabel>Type of activity</SelectLabel>
-                        <SelectItem value="Meeting">Meeting</SelectItem>
-                        <SelectItem value="Technical Assistance">Technical Assistance</SelectItem>
-                        <SelectItem value="Supportive Supervision">Supportive Supervision</SelectItem>
-                    </SelectGroup>
-                </SelectContent>
-            </Select>*/}
-            <ComboboxComponent 
-                comboOptions={activity_types} 
-                value={activity_type} 
-                setValue={setActivity_type} 
-                placeholder={isLoading ? "fetching..." : "Search activity type"}  
-                resource="activity type"
-            />
-            <ComboboxComponent 
-                comboOptions={program_areas} 
-                value={program_area} 
-                setValue={setProgram_area} 
-                placeholder={isLoading ? "fetching..." : "Search program area"}  
-                resource="program area"
-            />
-            <Select
-                value={priority} // Reflects the current state
-                onValueChange={setPriority} // Updates the state on selection
-            >
-                <SelectTrigger 
-                    className="h-14 bg-input border-border focus:ring-2 focus:ring-primary/30 focus:border-primary transition rounded-none"
-                >
-                    <SelectValue placeholder="Priority" />
-                </SelectTrigger>
-                <SelectContent>
-                    <SelectGroup>
-                        <SelectLabel>Priority</SelectLabel>
-                        <SelectItem value="High">High</SelectItem>
-                        <SelectItem value="Medium">Medium</SelectItem>
-                        <SelectItem value="Low">Low</SelectItem>
-                    </SelectGroup>
-                </SelectContent>
-            </Select>
+        }
             <div className='flex items-center gap-4'>
                 <ComboboxComponent 
                     comboOptions={fys} 
@@ -209,23 +165,85 @@ const NewActivity = () => {
                     </SelectContent>
                 </Select>
             </div>
-            <Select
-                value={accessibility} // Reflects the current state
-                onValueChange={setAccecibility} // Updates the state on selection
+            <Input
+                type="text"
+                placeholder="Activity title"
+                value={folder_title}
+                onChange={(e) => setFolder_title(e.target.value)}
+                className="h-14 bg-input border-border focus:ring-2 focus:ring-primary/30 focus:border-primary transition rounded-none"
+                required
+            /> 
+            {/*<Select
+                value={activity_type} // Reflects the current state
+                onValueChange={setActivity_type} // Updates the state on selection
             >
                 <SelectTrigger 
                     className="h-14 bg-input border-border focus:ring-2 focus:ring-primary/30 focus:border-primary transition rounded-none"
                 >
-                    <SelectValue placeholder="Access" />
+                    <SelectValue placeholder="Type of activity" />
                 </SelectTrigger>
                 <SelectContent>
                     <SelectGroup>
-                        <SelectLabel>Access</SelectLabel>
-                        <SelectItem value="public">public</SelectItem>
-                        <SelectItem value="private">private</SelectItem>
+                        <SelectLabel>Type of activity</SelectLabel>
+                        <SelectItem value="Meeting">Meeting</SelectItem>
+                        <SelectItem value="Technical Assistance">Technical Assistance</SelectItem>
+                        <SelectItem value="Supportive Supervision">Supportive Supervision</SelectItem>
                     </SelectGroup>
                 </SelectContent>
-            </Select>
+            </Select>*/}
+            <div className='flex items-center gap-4'>
+                <ComboboxComponent 
+                    comboOptions={activity_types} 
+                    value={activity_type} 
+                    setValue={setActivity_type} 
+                    placeholder={isLoading ? "fetching..." : "Search activity type"}  
+                    resource="activity type"
+                />
+                <ComboboxComponent 
+                    comboOptions={program_areas} 
+                    value={program_area} 
+                    setValue={setProgram_area} 
+                    placeholder={isLoading ? "fetching..." : "Search program area"}  
+                    resource="program area"
+                />
+            </div>
+            <div className='flex items-center gap-4'>
+                <Select
+                    value={priority} // Reflects the current state
+                    onValueChange={setPriority} // Updates the state on selection
+                >
+                    <SelectTrigger 
+                        className="h-14 bg-input border-border focus:ring-2 focus:ring-primary/30 focus:border-primary transition rounded-none"
+                    >
+                        <SelectValue placeholder="Priority" />
+                    </SelectTrigger>
+                    <SelectContent>
+                        <SelectGroup>
+                            <SelectLabel>Priority</SelectLabel>
+                            <SelectItem value="High">High</SelectItem>
+                            <SelectItem value="Medium">Medium</SelectItem>
+                            <SelectItem value="Low">Low</SelectItem>
+                        </SelectGroup>
+                    </SelectContent>
+                </Select>
+                <Select
+                    value={accessibility} // Reflects the current state
+                    onValueChange={setAccecibility} // Updates the state on selection
+                >
+                    <SelectTrigger 
+                        className="h-14 bg-input border-border focus:ring-2 focus:ring-primary/30 focus:border-primary transition rounded-none"
+                    >
+                        <SelectValue placeholder="Access" />
+                    </SelectTrigger>
+                    <SelectContent>
+                        <SelectGroup>
+                            <SelectLabel>Access</SelectLabel>
+                            <SelectItem value="public">public</SelectItem>
+                            <SelectItem value="private">private</SelectItem>
+                        </SelectGroup>
+                    </SelectContent>
+                </Select>
+            </div>
             <Textarea 
                 value={description}
                 placeholder="Enter description..."

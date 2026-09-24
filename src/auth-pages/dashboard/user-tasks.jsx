@@ -1,6 +1,6 @@
 import React, { useContext, useEffect, useMemo, useState } from 'react'
 import { AppContext } from '../../context/AppContext';
-import { closeAction, getUserActionpoints } from '../../utils/folders';
+import { closeAction, getUserTasks } from '../../utils/folders';
 import SkeletonComponent from '../../components/skeleton-component';
 import { format } from 'date-fns';
 import { Dialog, DialogContent, DialogTitle, DialogTrigger } from '../../components/ui/dialog';
@@ -16,12 +16,11 @@ import { cn } from "@/lib/utils";
 import PriorityOptions from '../../components/priority-options';
 import { toast } from 'sonner';
 import ActionPointsDetail from './action-points-detail';
-import { useNavigate } from 'react-router-dom';
 
-const ActionPoints = () => {
+const UserTasks = () => {
 
     const { token, user, record, refreshRecord } = useContext(AppContext);
-    const [actionpoints, setActionpoints] = useState();
+    const [tasks, setTasks] = useState();
     const [error, setError] = useState();
     const [loading, setLoading] = useState(false);
     const [currentStatus, setCurrentStatus] = useState('pending');
@@ -33,11 +32,6 @@ const ActionPoints = () => {
     const [closing, setClosing] = useState(false)
     const [success, setSuccess] = useState();
     const trackurl = window.location.origin+'/tracker';
-    const navigate = useNavigate()
-
-    /**if(actionpoints.status && actionpoints.status === 'Token is expired'){
-        navigate('/');
-    }*/
 
     const hasDatePassed = (dateString) => {
         const date = new Date(dateString);
@@ -254,11 +248,9 @@ const ActionPoints = () => {
         },
     ];
 
-    //actionpoints && setTimeout(() => setUpdated(updated+1), 500);
-
     const statusFilter = useMemo(() => {
-        // Ensure actionpoints is always an array
-        let points = Array.isArray(actionpoints) ? actionpoints : [];
+        // Ensure tasks is always an array
+        let points = Array.isArray(tasks) ? tasks : [];
         
         if ((!currentStatus || currentStatus === '') && (!priority || priority === '')) {
             return points;
@@ -280,15 +272,11 @@ const ActionPoints = () => {
         }
 
         return points;
-    }, [actionpoints, currentStatus, priority]);
+    }, [tasks, currentStatus, priority]);
 
     const getBacklogCount = () => {
         let backlogs = 0;
-        
-        if(actionpoints){
-            backlogs = actionpoints.filter(action => action.status !== 'completed' && hasDatePassed(action.timeline)).length;
-        }
-        
+        backlogs = tasks && tasks.filter(action => action.status !== 'completed' && hasDatePassed(action.timeline)).length;
         return backlogs;
     }
 
@@ -320,14 +308,12 @@ const ActionPoints = () => {
     }
 
     useEffect(() => {
-        token && getUserActionpoints(token, setActionpoints, setError, setLoading)
+        token && getUserTasks(token, setTasks, setError, setLoading)
     }, [record, token])
 
     useEffect(() => {
         setTotalbacklog(getBacklogCount());
-    }, [actionpoints])
-
-    console.log(actionpoints)
+    }, [tasks])
 
     return (
         <div className='w-full grid pb-4 bg-background rounded-2xl'>
@@ -370,7 +356,7 @@ const ActionPoints = () => {
             </div>
             <div className='w-full px-4 overflow-x-scroll'>
             {
-                loading || !actionpoints ? <SkeletonComponent /> :
+                loading || !tasks ? <SkeletonComponent /> :
                 statusFilter && <DataTable data={statusFilter} columns={columns} filterArrs={datafilters} />     
             }
             </div>
@@ -378,4 +364,4 @@ const ActionPoints = () => {
     )
 }
 
-export default ActionPoints
+export default UserTasks

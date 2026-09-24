@@ -12,11 +12,15 @@ import SvgLoader from '../../components/svg-loader';
 import { Dialog, DialogContent, DialogTitle, DialogTrigger } from '../../components/ui/dialog';
 import NotificationsDialog from '../notifications/notifications-dialog';
 import { useNavigate } from 'react-router-dom';
-import { FileSearchCorner, Settings, UserRoundCog, View } from 'lucide-react';
+import { FileSearchCorner, ListCheck, Settings, UserRoundCog, View } from 'lucide-react';
+import UserTasks from './user-tasks';
+import { SiPivotaltracker } from 'react-icons/si';
+import Trackers from './trackers';
+import Checklist from './checklist';
 
 const Dashboard = () => {
 
-    const { token, user } = useContext(AppContext);
+    const { token, user, record } = useContext(AppContext);
     const [actionpoints, setActionpoints] = useState();
     const [error, setError] = useState();
     const [loading, setLoading] = useState(false);
@@ -28,14 +32,15 @@ const Dashboard = () => {
 
     useEffect(() => {
         getUserStatistics(token, setStatistics, setError, setLoading);
-    }, [])
+    }, [record])
 
     useEffect(() => {
         user && JSON.parse(user).folder === 'APIN' &&
         pendingActivation(token, setPendingCount, setError, setLoading)
-    }, [])
+    }, [record])
   
-    console.log(pendingCount);
+    console.log(statistics && statistics.checklist_count);
+
 
     return (
         <div className='w-full grid gap-4 p-4'>
@@ -99,12 +104,29 @@ const Dashboard = () => {
                                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-list-todo-icon lucide-list-todo"><path d="M13 5h8"/><path d="M13 12h8"/><path d="M13 19h8"/><path d="m3 17 2 2 4-4"/><rect x="3" y="4" width="6" height="6" rx="1"/></svg>
                                 </div>
                             </div>
-                            <p 
-                                className="text-xs text-accent hover:text-accent-foreground mt-4 capitalize cursor-pointer"
-                                onClick={() => setView_summary(false)}
-                            >
-                            view tasks...
-                            </p>
+                            {
+                                user && JSON.parse(user).folder === 'APIN' ?
+                                        <p 
+                                            className="text-xs text-accent hover:text-accent-foreground mt-4 capitalize cursor-pointer"
+                                            onClick={() => setView_summary(false)}
+                                        >
+                                        view tasks...
+                                        </p> :
+                                        <Dialog>
+                                            <DialogTrigger asChild>
+                                                <p 
+                                                    className="text-xs text-accent hover:text-accent-foreground mt-4 capitalize cursor-pointer"
+                                                >
+                                                your tasks...
+                                                </p>
+                                            </DialogTrigger>
+                                            <DialogContent className="!w-screen !h-screen flex flex-col items-start overflow-y-scroll !max-w-none">
+                                                <DialogTitle>Your tasks</DialogTitle>
+                                                <UserTasks />
+                                            </DialogContent>
+                                        </Dialog>
+                            }
+                            
                         </div>
 
                         <div className={`bg-card hover:bg-card/50 border ${statistics && statistics?.unread_notifications > 0 ? 'border-amber-500' : 'border-border'} rounded-lg p-6`}>
@@ -140,30 +162,83 @@ const Dashboard = () => {
                             </p>
                         </div>
                     </div> 
-                {
-                    user && JSON.parse(user).folder === 'APIN' && pendingCount !== null &&
-                    <div className="bg-background border border-border rounded-lg p-6">
-                        <div className={`grid grid-cols-1 gap-4`}>
-                            <div
-                                className="bg-gray-100 dark:bg-[#030f36]/50 flex items-center justify-between h-auto py-3 px-4 rounded-md"
-                            >
-                                <div>
-                                    <p className="text-lg font-extralight text-foreground">Pending Accounts</p>
-                                    <p className="text-xs text-muted-foreground hover:text-foreground mt-1 cursor-pointer">
-                                    <a href={url+`?active_view=users`}>Click here to manage accounts with pending activation status</a>
-                                    </p>
+                <div className="bg-background border border-border rounded-lg p-6">
+                    <div className={`grid md:grid-cols-2 gap-4`}>
+                    {
+                        user && JSON.parse(user).folder === 'APIN' && pendingCount !== null &&
+                        <div
+                            className="bg-gray-100 dark:bg-[#030f36]/50 flex items-center justify-between h-auto py-3 px-4 rounded-md"
+                        >
+                            <div>
+                                <p className="text-lg font-extralight text-foreground">Pending Accounts</p>
+                                <p className="text-xs text-muted-foreground hover:text-foreground mt-1 cursor-pointer">
+                                <a href={url+`?active_view=users`}>Click here to manage accounts with pending activation status</a>
+                                </p>
+                            </div>
+                            <a href={url+`?active_view=users`}>
+                                <div 
+                                    className={`w-10 h-10 ${pendingCount > 0 ? 'bg-orange-600 text-white' : 'bg-muted-foreground'} rounded-lg flex items-center justify-center cursor-pointer text-3xl`}
+                                >
+                                    <span>{pendingCount}</span>
                                 </div>
-                                <a href={url+`?active_view=users`}>
-                                    <div 
-                                        className={`w-10 h-10 ${pendingCount > 0 ? 'bg-orange-600 text-white' : 'bg-muted-foreground'} rounded-lg flex items-center justify-center cursor-pointer text-3xl`}
-                                    >
-                                        <span>{pendingCount}</span>
-                                    </div>
-                                </a>
+                            </a>
+                        </div>
+                    }
+                        <div
+                            className="bg-gray-100 dark:bg-[#030f36]/50 flex items-center justify-between h-auto py-3 px-4 rounded-md"
+                        >
+                            <div>
+                                <p className="text-lg font-extralight text-foreground">Activity trackers</p>
+                                <p className="text-sm text-muted-foreground hover:text-foreground mt-1 cursor-pointer">
+                                    <Dialog>
+                                        <DialogTrigger asChild>
+                                            <span className='cursor-pointer hover:text-accent dark:hover:text-brand'>Click here to track activities</span>
+                                        </DialogTrigger>
+                                        <DialogContent className="!w-screen !h-screen flex flex-col items-start overflow-y-scroll !max-w-none">
+                                            <DialogTitle>Activity trackers</DialogTitle>
+                                            <Trackers />
+                                        </DialogContent>
+                                    </Dialog>
+                                </p>
+                            </div>
+                            <div className='p-2 bg-foreground/10 rounded-md'>
+                                <SiPivotaltracker className='w-6 h-6 text-accent dark:text-brand' />
                             </div>
                         </div>
+                    {
+                        user && JSON.parse(user).folder !== 'APIN' &&
+                        <div
+                            className="bg-gray-100 dark:bg-[#030f36]/50 flex items-center justify-between h-auto py-3 px-4 rounded-md"
+                        >
+                            <div>
+                                <p className="text-lg font-extralight text-foreground">Check-list</p>
+                                <p className="text-sm text-muted-foreground hover:text-foreground mt-1 cursor-pointer">
+                                    <Dialog>
+                                        <DialogTrigger asChild>
+                                            <span className='cursor-pointer hover:text-accent dark:hover:text-brand'>Generate a checklist on pending tasks in your destination</span>
+                                        </DialogTrigger>
+                                        <DialogContent className="!w-[75vw] !h-[95vh] flex flex-col items-start overflow-y-scroll !max-w-none">
+                                            <DialogTitle>Checklist for pending tasks</DialogTitle>
+                                            <Checklist />
+                                        </DialogContent>
+                                    </Dialog>
+                                </p>
+                            </div>
+                            <Dialog>
+                                <DialogTrigger asChild>
+                                    <div className={`p-2 rounded-md ${statistics && statistics.checklist_count && statistics.checklist_count > 0 ? 'border-2 border-red-600 bg-red-600/20' : 'bg-foreground/10'} cursor-pointer`}>
+                                        <ListCheck className='w-6 h-6 text-accent dark:text-brand' />
+                                    </div>
+                                </DialogTrigger>
+                                <DialogContent className="!w-[75vw] !h-[95vh] flex flex-col items-start overflow-y-scroll !max-w-none">
+                                    <DialogTitle>Checklist for pending tasks</DialogTitle>
+                                    <Checklist />
+                                </DialogContent>
+                            </Dialog>
+                        </div>
+                    }
                     </div>
-                }
+                </div>
                 </div>
                 :
                 <div 

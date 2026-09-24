@@ -29,6 +29,7 @@ import Requests from "./auth-pages/procurement-requests/requests";
 import Folders from "./auth-pages/folders/folders";
 import Activities from "./auth-pages/activities/activities";
 import SystemSettings from "./auth-pages/settings/system-settings";
+import Trackers from "./auth-pages/activities/trackers";
 
 function App() {
 
@@ -59,6 +60,7 @@ function App() {
                     <Route path="/repository" element={<ProtectedRoute><Folders /></ProtectedRoute>} />
                     <Route path="/activities" element={<ProtectedRoute><Activities /></ProtectedRoute>} />
                     <Route path="/settings" element={<ProtectedRoute><SystemSettings /></ProtectedRoute>} />
+                    <Route path="/tracker" element={<ProtectedRoute><Trackers /></ProtectedRoute>} />
                   </Route>
               </Routes>
             </Router>

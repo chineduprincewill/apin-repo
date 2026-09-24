@@ -1,6 +1,6 @@
 import React, { useContext, useEffect, useMemo, useRef, useState } from 'react'
 import PageHeader from '../../components/page-header'
-import { ArrowLeft, ArrowLeftToLine, ChevronFirst, ChevronLast, ChevronLeft, ChevronRight, CircleX, CloudUpload, Edit, Ellipsis, File, FileIcon, FileSearchCorner, FileText, FolderOpen, FolderPlusIcon, FolderSearch, Forward, House, LayoutGrid, Link, List, PlusCircleIcon, PlusIcon, ReceiptText, UserPlus, UserRoundCog, X } from 'lucide-react'
+import { Activity, ArrowLeft, ArrowLeftToLine, ChevronFirst, ChevronLast, ChevronLeft, ChevronRight, CircleX, CloudUpload, Edit, Ellipsis, File, FileIcon, FileSearchCorner, FileText, FolderOpen, FolderPlusIcon, FolderSearch, Forward, Home, House, LayoutGrid, Link, List, PlusCircleIcon, PlusIcon, ReceiptText, ScanSearch, UserPlus, UserRoundCog, X } from 'lucide-react'
 import FolderIcon from '../../components/folder-icon'
 import UserIcon from '../../components/user-icon'
 import { Dialog, DialogContent, DialogDescription, DialogTitle, DialogTrigger } from '../../components/ui/dialog'
@@ -13,23 +13,26 @@ import FolderUsers from './folder-users'
 import FileProperties from './file-properties'
 import ShareDialog from './share-dialog'
 import FileDetail from './file-detail'
-import { useSearchParams } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import RenameFolder from './rename-folder'
 import { toast } from 'sonner'
 import GroupadminsDialog from './groupadmins-dialog'
 import { generateTwoDigitRange, getFiscalYear, getNextQuarter } from '../../utils/functions'
 import ComboboxComponent from '../../components/combobox-component'
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from '../../components/ui/select'
+import ActivityTracker from '../activities/activity-tracker'
+import { SiPivotaltracker } from 'react-icons/si'
 
 const Folders = () => {
 
     const [searchParams] = useSearchParams();
+    const navigate = useNavigate();
     const { token, user, record, refreshRecord } = useContext(AppContext);
     const [folders, setFolders] = useState();
     const [error, setError] = useState();
     const [loading, setLoading] = useState(false);
     const [folder_name, setFolder_name] = useState(searchParams.get('foldername') ? searchParams.get('foldername') : (user && JSON.parse(user)?.folder));
-    const [folder_type, setFolder_type] = useState('system');
+    const [folder_type, setFolder_type] = useState(searchParams.get('foldertype') ? searchParams.get('foldertype') :'system');
     const [prev, setPrev] = useState();
     const [active_view, setActive_view] = useState(searchParams.get('active_view') ? searchParams.get('active_view') :'folders')
     const [filecreated, setFilecreated] = useState();
@@ -48,6 +51,8 @@ const Folders = () => {
     const [quarter, setQuarter] = useState('');
     const [fy, setFy] = useState()
     const fys = generateTwoDigitRange(4);
+    const [is_activity, setIs_activity] = useState(searchParams.get('isactivity') && searchParams.get('isactivity'));
+    const [fid, setFid] = useState(searchParams.get('folderid') && searchParams.get('folderid'))
 
     const clearSelection = () => {
         setFy();
@@ -109,13 +114,14 @@ const Folders = () => {
          });
     };
 
-    const updateLinks = (current, parent, type, access, grp_admin) => {
+    const updateLinks = (current, parent, type, access, grp_admin, an_activity) => {
         //alert(current)
         setFolder_name(current);
         setPrev(parent)
         setFolder_type(type)
         setPrivileges(access)
         setG_admin(grp_admin)
+        setIs_activity(an_activity)
     }
 
     const columns = [
@@ -129,19 +135,23 @@ const Folders = () => {
       
                 return (
                     <div 
-                        className='flex items-center gap-4 cursor-pointer'
-                        onClick={() => fld.folder_type !== 'file' && updateLinks(fld.folder_name, fld.parent_folder, fld.folder_type, fld.privileges, fld.group_admin)}
+                        className='flex items-center gap-2 cursor-pointer'
+                        onClick={() => fld.folder_type !== 'file' && updateLinks(fld.folder_name, fld.parent_folder, fld.folder_type, fld.privileges, fld.group_admin, fld.is_activity)}
                     >
+                        <div className='w-10'>
                     {
                         fld.folder_type === 'file' ?
-                        <FileText className='mx-2' /> : 
+                        <FileText className='w-8 h-8 mx-2' /> : 
                         <FolderIcon size='small' />
+                        
                     }
+                        </div>
                         <div className='grid gap-0'>
-                            <span className='text-lg font-extralight capitalize'>
+                            <span className={`${fld.folder_type !== 'file' && 'capitalize' } text-lg font-extralight text-wrap`}>
                             {
-                                fld.folder_type === 'file' ? 
-                                fld?.folder_title.toLowerCase() : fld.folder_title
+                                //fld.folder_type === 'file' ? 
+                                //fld?.folder_title.toLowerCase() : 
+                                fld.folder_title
                             }
                             </span>
                         </div>
@@ -196,14 +206,14 @@ const Folders = () => {
               return (
                 <div className="w-full flex items-center justify-end gap-3">
                 {
-                    fld.folder_type === 'file' && fld.description !== null &&
+                    fld.folder_type === 'file' &&
                     <Dialog>
                         <DialogTrigger asChild>
                             <div className='hover:text-muted-foreground'>
                                 <FileSearchCorner className='w-4 h-4 cursor-pointer' />
                             </div>
                         </DialogTrigger>
-                        <DialogContent className="!w-[55vw] overflow-y-auto !max-w-none bg-background rounded-2xl">
+                        <DialogContent className="bg-background rounded-2xl">
                             <DialogTitle className="font-extralight">{fld && fld.parent_folder.split('__').at(-1).replaceAll('_', ' ')+' | '+fld.folder_title}</DialogTitle>
                             <FileDetail 
                                 id={fld.id}
@@ -351,6 +361,8 @@ const Folders = () => {
         listProgramAreas(token, setProgram_areas, setError, setIsLoading)
     }, [])
 
+    console.log(folders)
+
     return (
         <div className={`w-full grid ${active_view === 'folders' ? 'gap-4' : 'gap-4'} p-4`}>
             {/** PAGE DIRECTORY LISTING */}
@@ -359,7 +371,7 @@ const Folders = () => {
                     <span
                         className='text-sm font-extralight cursor-pointer'
                         onClick={() => setFolder_name('APIN')}
-                    >Home</span>
+                    >APIN</span>
                     <span className='text-sm mx-1'>|</span>
                 {
                     folder_name !== 'APIN' &&
@@ -394,6 +406,13 @@ const Folders = () => {
                     }
                     </>
                 }
+                </div>
+                <div 
+                    className='flex items-center gap-0.5 mr-4 px-4 py-1 rounded-full border border-muted-foreground/50 shadow-xl hover:bg-muted-foreground/10 cursor-pointer'
+                    onClick={() => window.location.reload()}
+                >
+                    <Home className='w-4 h-4 text-muted-foreground' />
+                    <span className='font-extralight'>Home</span>
                 </div>
             </div>
 
@@ -441,9 +460,10 @@ const Folders = () => {
                     />
                 </div>
             }
-                <div className='flex items-center gap-12'>
+                <div className='flex items-center gap-8 pr-4'>
                 {
-                    user && ((userinfo.role === 'admin' && folder_name.startsWith(userinfo.folder)) || (g_admin && g_admin.includes(userinfo.email))) && folder_type === 'system' &&
+                    //user && ((userinfo.role === 'admin' && folder_name.startsWith(userinfo.folder)) || (g_admin && g_admin.includes(userinfo.email))) && folder_type === 'system' &&
+                    user && userinfo.role === 'admin' && userinfo.folder === 'APIN' && folder_type === 'system' &&
                     <Dialog>
                         <DialogTrigger asChild>
                             <div className='grid gap-1'>
@@ -460,6 +480,17 @@ const Folders = () => {
                         </DialogContent>              
                     </Dialog>
                 }
+                    <div className='grid gap-1'>
+                        <div 
+                            className='relative w-16 h-16 py-2 border border-muted-foreground/50 rounded-xl shadow-md flex items-center justify-center cursor-pointer hover:bg-muted-foreground/20 mx-auto'
+                            onClick={() => navigate('/activities')}
+                        >
+                            <Activity className='w-8 h-8 text-accent dark:text-brand' />
+                        </div>
+                        <div className='w-full flex justify-center'>
+                            <span className='text-sm'>Activities</span>
+                        </div>
+                    </div>
                 {   
                     folder_type === 'system' &&
                     <div className='grid gap-1'>
@@ -570,7 +601,7 @@ const Folders = () => {
                 <DialogTrigger asChild>
                     <CloudUpload className='w-6 h-6 text-blue-500 cursor-pointer' />
                 </DialogTrigger>
-                <DialogContent className="!w-[55vw] overflow-y-auto !max-w-none">
+                <DialogContent>
                     <DialogTitle className="font-extralight">{filecreated && filecreated.parent_folder.split('__').at(-1).replaceAll('_', ' ')+' | '+filecreated.folder_title}</DialogTitle>
                     <FileProperties 
                         fileinfo={filecreated} 

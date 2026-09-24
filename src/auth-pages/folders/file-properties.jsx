@@ -18,113 +18,13 @@ const FileProperties = ({ fileinfo, setIsOpen }) => {
 
     const { token, refreshRecord } = useContext(AppContext);
     const [isDialogOpen, setIsDialogOpen] = useState(false)
-    const [brief, setBrief] = useState(fileinfo && fileinfo.description);
-    const [actionpoints, setActionpoints] = useState([]);
-    const [point, setPoint] = useState();
-    const [resp, setResp] = useState();
-    const [date, setDate] = useState();
-    const [actionform, setActionform] = useState(false);
-    const [uploadform, setUploadform] = useState(false);
     const [filedocuments, setFiledocuments] = useState([]);
     const [doctitle, setDoctitle] = useState();
     const [docfile, setDocfile] = useState();
-    const [activetab, setActivetab] = useState('summary')
+    const [activetab, setActivetab] = useState('attachments')
     const [success, setSuccess] = useState();
     const [error, setError] = useState();
     const [isLoading, setIsLoading] = useState(false);
-    const [priority, setPriority] = useState('Low');
-
-    const options = [
-        { value: "High", label: "High" },
-        { value: "Medium", label: "Medium" },
-        { value: "Low", label: "Low" },
-    ];
-
-    function getPriorityIcon(priority) {
-        switch (priority) {
-          case "High":
-            return <Wifi className="h-5 w-5 text-red-600" />;
-          case "Medium":
-            return <WifiHigh className="h-5 w-5 text-yellow-600" />;
-          case "Low":
-            return <WifiLow className="h-5 w-5 text-green-600" />;
-          default:
-            return null;
-        }
-    }
-
-    const [contextMenu, setContextMenu] = useState({
-        visible: false,
-        x: 0,
-        y: 0
-    });
-
-    const optionRef = useRef(null);
-
-    const toggleActionform = () => {
-        setActionform(!actionform);
-    }
-
-    const toggleUploadform = () => {
-        setUploadform(!uploadform);
-    }
-
-    const handleKeyDown = (e) => {
-        // Check if @ key was pressed (key: '@' or keyCode: 50)
-        if (e.key === '@') {
-            e.preventDefault(); // Prevent default @ insertion
-
-            setContextMenu({
-                visible: true,
-                x: e.clientX,
-                y: e.clientY
-            });
-        }
-    };
-
-    const updatePoint = (pnt) => {
-        setPoint(pnt);
-
-        setContextMenu({
-            visible: false,
-            x: 0,
-            y: 0
-        });
-    }
-
-    const addActionpoint = () => {
-
-        if((!point && point !== '') || (!resp && resp !== '') ||(!date && date !== '') ||(!priority && priority !== '')){
-            alert('Action point not entered properly');
-            return;
-        }
-
-        const data = {};
-        data.action_point = point;
-        data.responsible = resp;
-        data.timeline = date;
-        data.priority = priority;
-
-        setActionpoints(() => [
-            ...actionpoints,
-            data
-        ])
-
-        setPoint('');
-        setResp('');
-        setDate();
-        setPriority('');
-        toggleActionform();
-    }
-    
-    const removeAct = (act) => {
-        if(window.confirm(`Are you sure you want to remove ${act?.action} from the list of actions points`)){
-            //alert(`${title} removed!`)
-            setActionpoints(prevOpts => 
-                prevOpts.filter(opt => opt !== act)
-            );
-        }
-    }
 
     const handleFileDrop = (acceptedFiles) => {
         setIsDialogOpen(true);
@@ -167,8 +67,8 @@ const FileProperties = ({ fileinfo, setIsOpen }) => {
 
             const formData = new FormData();
             formData.append('file_id', fileinfo.id);
-            formData.append('brief', brief);
-            appendArrayToFormData(formData, actionpoints, 'actionpoints');
+            //formData.append('brief', brief);
+            //appendArrayToFormData(formData, actionpoints, 'actionpoints');
             appendArrayToFormData(formData, filedocuments, 'filedocuments');
 
             //console.log(formData);
@@ -184,8 +84,6 @@ const FileProperties = ({ fileinfo, setIsOpen }) => {
         //console.log(success);
         setSuccess();
         setFiledocuments([]);
-        setActionpoints([]);
-        setBrief('');
         refreshRecord(Date.now());
         setTimeout(() => setIsOpen(false), 1000);
     }
@@ -198,48 +96,11 @@ const FileProperties = ({ fileinfo, setIsOpen }) => {
         setError();
     }
 
-    useEffect(() => {
-            folderActionpoints(token, { id: fileinfo.id }, setActionpoints, setError, setIsLoading)
-    }, [])
-
-    console.log(actionpoints)
-
     return (
         <div className='grid gap-4'>
             <div className="h-px bg-gradient-to-r from-transparent via-blue-950 dark:via-white to-transparent"></div>
             {/** FILE PROPERTIES NAVIGATION/TAB BUTTONS */}
             <div className='flex items-center justify-center gap-12 p-2'>
-                <div 
-                    className='grid gap-1 cursor-pointer hover:text-accent dark:hover:text-brand'
-                    onClick={() => setActivetab('summary')}
-                >
-                    <div className='flex justify-center'>
-                        <div 
-                            className={`relative w-12 h-12 py-2 ${activetab === 'summary' ? 'bg-accent dark:bg-brand text-white dark:text-accent' :  'border border-muted-foreground/50'} rounded-xl shadow-md flex items-center justify-center cursor-pointer`}
-                        >
-                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-summary-icon lucide-summary"><path d="M15 4H7"/><path d="m18 16 3 3-3 3"/><path d="M3 4v13a2 2 0 0 0 2 2h16"/><path d="M7 14h7"/><path d="M7 9h12"/></svg>
-                        </div>
-                    </div>
-                    <div className='w-full flex justify-center'>
-                        <span className={`text-sm ${activetab === 'summary' && 'text-accent dark:text-brand'}`}>Summary</span>
-                    </div>
-                </div>
-                <div 
-                    className='grid gap-1 cursor-pointer hover:text-accent dark:hover:text-brand'
-                    onClick={() => setActivetab('points')}
-                >
-                    <div className='flex justify-center'>
-                        <div 
-                            className={`relative w-12 h-12 py-2 ${activetab === 'points' ? 'bg-accent dark:bg-brand text-white dark:text-accent' :  'border border-muted-foreground/50'} rounded-xl shadow-md flex items-center justify-center cursor-pointer`}
-                        >
-                            
-                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-list-icon lucide-list"><path d="M3 5h.01"/><path d="M3 12h.01"/><path d="M3 19h.01"/><path d="M8 5h13"/><path d="M8 12h13"/><path d="M8 19h13"/></svg>
-                        </div>
-                    </div>
-                    <div className='w-full flex justify-center'>
-                        <span className={`text-sm ${activetab === 'points' && 'text-accent dark:text-brand'}`}>Action points</span>
-                    </div>
-                </div>
                 <div 
                     className='grid gap-1 cursor-pointer hover:text-accent dark:hover:text-brand'
                     onClick={() => setActivetab('attachments')}
@@ -259,99 +120,6 @@ const FileProperties = ({ fileinfo, setIsOpen }) => {
 
             {/** FILE PROPERTIES MAIN CONTENT */}
             <div className='w-full p-0 border border-muted-foreground/50 rounded-2xl'>
-                <div className={`gap-0 ${activetab === 'summary' ? 'grid' : 'hidden'}`}>
-                    <Label className="font-extralight text-lg p-3 border-b border-muted-foreground/50">Content summary</Label>
-                    <div className='grid gap-5 p-5'>
-                        <Textarea 
-                            value={brief}
-                            className="p-2 rounded-xl h-72 border border-muted-foreground/20"
-                            onChange={(e) => setBrief(e.target.value)}
-                        ></Textarea>
-                        <Button 
-                            variant="outline" className="flex gap-1 items-center h-12"
-                            onClick={() => setActivetab('points')}
-                        >
-                            <span>Next</span>
-                            <CircleArrowRight />
-                        </Button>
-                    </div>
-                </div>
-                <div className={`gap-0 ${activetab === 'points' ? 'grid' : 'hidden'}`}>
-                    <Label className="font-extralight text-lg p-3 border-b border-muted-foreground/50">Action points</Label>
-                    <div className='grid gap-5 p-5'>
-                        <Input
-                            type="text"
-                            value={point}
-                            className="p-2 rounded-xl h-12 border border-muted-foreground/20"
-                            placeholder="Enter action point or type '@' to select special actions"
-                            onChange={(e) => setPoint(e.target.value)}
-                            onKeyDown={handleKeyDown}
-                        />
-                        <div className='w-full grid md:flex md:items-start md:justify-between gap-2'>
-                            <Textarea 
-                                value={resp}
-                                rows='3'
-                                className="w-[57%] p-2 rounded-xl !min-h-12 border border-muted-foreground/20"
-                                placeholder="email of responsible persons, separate with comma"
-                                onChange={(e) => setResp(e.target.value)}
-                            >
-                            </Textarea>
-                            <div className='grid gap-2 w-[32%]'>
-                                <DatePicker date={date} setDate={setDate} />
-                                <RadioGroup
-                                    value={priority}
-                                    onValueChange={setPriority}
-                                    className="flex items-center gap-3"
-                                >
-                                    {options.map((option) => (
-                                    <div key={option.value} className="flex items-center space-x-2">
-                                        <RadioGroupItem value={option.value} id={option.value} />
-                                        <Label htmlFor={option.value} className="cursor-pointer text-sm font-extralight">
-                                        {option.label}
-                                        </Label>
-                                    </div>
-                                    ))}
-                                </RadioGroup>
-                            </div>
-                            <Plus 
-                                className='w-12 h-12 hover:text-muted-foreground cursor-pointer' 
-                                onClick={() => addActionpoint()}
-                            />
-                        </div>
-                        <div 
-                            className={`w-full p-2 border border-muted-foreground/20 rounded-xl h-36 overflow-y-scroll`}>
-                        {
-                            isLoading ? <span className='text-muted-foreground italic text-sm'>fetching action points...</span> :
-                            (actionpoints.length > 0 ? actionpoints.map((act, index) => (
-                                <div 
-                                    key={index} 
-                                    className='flex items-center justify-between'
-                                >
-                                    <div className='flex items-center gap-2 mb-3'>
-                                        {getPriorityIcon(act.priority)}
-                                        <div className='grid gap-0'>
-                                            <span className='hover:text-muted-foreground font-extralight leading-tight'>{act?.action_point}</span>
-                                            <span className='text-xs text-muted-foreground hover:text-muted-foreground/50 font-extralight'>By {act?.responsible.replaceAll(',', ' ')} not later than {format(act.timeline, 'MMMM do, yyyy')}</span>
-                                        </div>
-                                    </div>
-                                    <CircleX 
-                                        className='w-5 h-5 text-red-600 hover:text-red-800 cursor-pointer' 
-                                        onClick={() => removeAct(act)}
-                                    />
-                                </div>
-                            )) : (<span className='text-muted-foreground/30'>No action entered yet</span>))
-                        }
-                        </div>
-                        <Button 
-                            variant="outline" 
-                            className="flex gap-1 items-center h-12"
-                            onClick={() => setActivetab('attachments')}
-                        >
-                            <span>Next</span>
-                            <CircleArrowRight />
-                        </Button>
-                    </div>
-                </div>
                 <div className={`gap-0 ${activetab === 'attachments' ? 'grid' : 'hidden'}`}>
                     <Label className="font-extralight text-lg p-3 border-b border-muted-foreground/50">Upload attachments</Label>
                     <div className='grid gap-5 p-5'>
@@ -431,30 +199,6 @@ const FileProperties = ({ fileinfo, setIsOpen }) => {
                     </div>
                 </div>
             </div>
-            {contextMenu.visible && (
-            <div
-                ref={optionRef}
-                style={{
-                    position: 'fixed',
-                    top: contextMenu.y,
-                    left: contextMenu.x,
-                }}
-                className="bg-background border border-muted-foreground/20 rounded-lg shadow-xl py-1 w-4/12 z-50 !mt-60 !ml-5"
-            >
-                <button
-                    className="w-full text-left px-4 py-2 hover:bg-foreground/5 transition-colors"
-                    onClick={() => updatePoint('Submitted for your approval')}
-                >
-                    Submitted for your approval
-                </button>
-                <button
-                    className="w-full text-left px-4 py-2 hover:bg-foreground/5 transition-colors"
-                    onClick={() => updatePoint('Submitted for your review')}
-                >
-                    Submitted for your review
-                </button>
-            </div>
-        )}
         </div>
     )
 }

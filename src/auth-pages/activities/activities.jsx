@@ -16,6 +16,7 @@ import ActivityActionPoints from './activity-action-points';
 import PriorityOptions from '../../components/priority-options';
 import ComboboxComponent from '../../components/combobox-component';
 import ActivityCompletionStatus from './activity-completion-status';
+import { SiPivotaltracker } from 'react-icons/si';
 //import Comments from '../comments/comments';
 
 const Activities = () => {
@@ -32,6 +33,7 @@ const Activities = () => {
     const fys = generateTwoDigitRange(4);
     
     const url = window.location.origin+'/repository';
+    const trackurl = window.location.origin+'/tracker';
 
     const getPriorityIcon = (priority) => {
         switch (priority) {
@@ -60,7 +62,7 @@ const Activities = () => {
                         className='flex items-center gap-4 cursor-pointer'
                     >
                         <div className='grid gap-0'>
-                            <span className='text-lg font-extralight'>
+                            <span className='text-lg text-wrap font-extralight'>
                             {fld.folder_title}
                             </span>
                             <span className='font-extralight text-sm text-muted-foreground'>
@@ -112,7 +114,7 @@ const Activities = () => {
                     <div 
                         className='flex items-center gap-4 cursor-pointer'
                     >
-                        <div className='grid gap-1'>
+                        <div className='grid gap-0'>
                             <span className='text-lg font-extralight'>
                             {fld.activity_type}
                             </span>
@@ -155,11 +157,14 @@ const Activities = () => {
     
               return (
                 <div className="w-full flex items-center justify-end gap-2">
+                    <a href={trackurl+`?&folderid=${encodeURIComponent(fld.id)}&foldername=${encodeURIComponent(fld.folder_name)}`}>
+                        <SiPivotaltracker className='w-4 h-4 text-accent dark:text-brand' />
+                    </a>
                     <Dialog>
                         <DialogTrigger asChild>
                             <ListTodo className='w-4 h-4 cursor-pointer mr-1' />
                         </DialogTrigger>
-                        <DialogContent className="!w-[55vw] !max-h-[90vh] overflow-y-auto !max-w-none">
+                        <DialogContent className="!w-[75vw] !max-h-[90vh] overflow-y-auto !max-w-none">
                             <DialogTitle>{fld.folder_title} action points</DialogTitle>
                             <ActivityActionPoints activity_id={fld.id} />
                         </DialogContent>
@@ -175,7 +180,7 @@ const Activities = () => {
                             <Comments activity_id={fld.id} type="folders" />
                         </DialogContent>
                     </Dialog>
-                    <a href={url+`?foldername=${encodeURIComponent(fld.folder_name)}&parentfolder=${encodeURIComponent(fld.parent_folder)}`}>
+                    <a href={url+`?foldername=${encodeURIComponent(fld.folder_name)}&parentfolder=${encodeURIComponent(fld.parent_folder)}&foldertype=${encodeURIComponent(fld.folder_type)}&isactivity=${encodeURIComponent(fld.is_activity)}&folderid=${encodeURIComponent(fld.id)}`}>
                         <FolderIcon size='xtrasmall' />
                     </a>
                 {

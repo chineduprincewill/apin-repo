@@ -58,6 +58,8 @@ export const statusColor = (stat) => {
             return 'text-green-600';
         case 'Completed':
             return 'text-blue-600 dark:text-blue-300';
+        case 'Past':
+            return 'text-muted-foreground/50';
         default:
             return 'text-red-500';
     }
@@ -277,7 +279,7 @@ export const getActivityStatus = (date1, date2) => {
 
     // Current date is on or after the end
     if (current >= end) {
-        return 'Completed';
+        return 'Past';
     }
 
     // Fallback (should never occur with valid dates)
@@ -323,4 +325,54 @@ export const getFiscalYear = (date = new Date()) => {
   
     const fiscalYear = month >= 9 ? year + 1 : year;
     return 'FY' + String(fiscalYear % 100).padStart(2, '0');
+}
+
+export const getStates = (data) => {
+    return [...new Set(data.map(dt => dt.state))].sort().map(state => ({ title: state }));;
+}
+
+export const getLGAsByState = (data, state) => {
+    return [...new Set(
+        data
+            .filter(item => item.state === state)
+            .map(item => item.lga)
+    )]
+        .sort()
+        .map(lga => ({ title: lga }));
+}
+
+export const getFacilitiesByLga = (data, lga) => {
+    return data
+        .filter(item => item.lga === lga && item.facility !== null)
+        .map(item => ({ title: item.facility }));
+}
+
+export const getTripOrigin = (str, separator = "__") => {
+    const parts = str.split(separator);
+    return parts[0]+' '+parts[2] ?? null;
+}
+
+export const filterFullnameAndEmail = (users) => {
+    return users.map(user => ({
+        label: user.fullname,
+        title: user.email
+    }));
+}
+
+export const formatDateToUnderscore = (isoString) => {
+    const date = new Date(isoString);
+    
+    const year = date.getUTCFullYear();
+    const month = String(date.getUTCMonth() + 1).padStart(2, '0');
+    const day = String(date.getUTCDate()).padStart(2, '0');
+    
+    return `${year}_${month}_${day}`;
+}
+
+export const ucfirst = (str) => {
+    return str.charAt(0).toUpperCase() + str.slice(1);
+}
+
+export const uniqueValues = (arr, key) => {
+    return [...new Set(arr.map(item => item[key]))].map(title => ({ title }));
 }
